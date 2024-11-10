@@ -22,11 +22,7 @@ from collections import defaultdict
 def simple_resize(path_in, new_size = (256*3, 256*4)):
 
     mps_list = []
-    bound = 1 # For debuging. To compress the whole dataset, set it to -1
-
     for i, filename in enumerate(os.listdir(path_in)):
-        if i>=bound:
-            break
         print("Working on image:",i,"!")
         image_path = os.path.join(path_in, filename)
 
@@ -40,14 +36,11 @@ def simple_resize(path_in, new_size = (256*3, 256*4)):
 
 def padded_resize(path_in, new_size = (256*4, 256*3), pad_to = 1024):
     mps_list = []
-    bound = 2
 
     pad_top_bottom = (pad_to - new_size[1]) // 2
     pad_left_right = (pad_to - new_size[0]) // 2
 
     for i, filename in enumerate(os.listdir(path_in)):
-        if i>=bound:
-            break
         print("Working on image:",i,"!")
         image_path = os.path.join(path_in, filename)
 
@@ -66,6 +59,10 @@ def padded_resize(path_in, new_size = (256*4, 256*3), pad_to = 1024):
 
 
 #%%
+
+# TODO: change the path to the Drive dataset and 1024x1024 if we
+# want to also have the enlarged dataset !!!
+
 path_in = r'/home/myron/QEL2024/mps/DIV2K_BW/' # CHANGE PATH TO LOAD IMAGES
 mps_list = simple_resize(path_in, new_size=(512, 512)) # first value is the number of columns
                                                         # second value is the number of rows
@@ -96,6 +93,7 @@ for i, (mps, img_array) in enumerate(mps_list):
         final_matrix = mps.mps_to_matrix() 
         compression_ratio_DCT[f'Image{i}'].append(mps.compression_ratio())
 
+        # In case we want to run PSNR as well
         # psnr_dict[f'Image{i}'].append(output_image_quality(img_array, 
         #                                                 final_matrix, metric="psnr"))
 
@@ -136,10 +134,10 @@ def load_dicts_from_txt(file_path):
 file_path = "compression_ssim_data2.txt"
 
 # save_dicts_to_txt(file_path, psnr_dict, compression_ratio_DCT)
-save_dicts_to_txt(file_path, ssim_dict, compression_ratio_DCT)
+# save_dicts_to_txt(file_path, ssim_dict, compression_ratio_DCT)
 
 # loaded_psnr_dict, loaded_compression_ratio_DCT = load_dicts_from_txt(file_path)
-# loaded_ssim_dict, loaded_compression_ratio_DCT = load_dicts_from_txt(file_path)
+loaded_ssim_dict, loaded_compression_ratio_DCT = load_dicts_from_txt(file_path)
 
 
 # %%
@@ -207,10 +205,11 @@ plt.show()
 
 ssim_list = []
 
+# 500th element of the compression factor list (3.14)
 for i in interpolated_ssim_values[:,500]:
     ssim_list.append(i)
 
-
+print(common_compression_factors[500])
 plt.figure(figsize=(10, 6))
 plt.hist(ssim_list, bins=100, color='skyblue', edgecolor='black', alpha=0.7)
 plt.xlabel('ssim')
