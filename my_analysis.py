@@ -141,8 +141,24 @@ def Define_Bins_for_Compression_Factor(compression_factor_dict,
 
     binned_ssim = defaultdict(list)
     for cf, ssim_values in compression_factor_dict.items():
-        bin_index = np.digitize(cf, bin_edges) - 1
-        if 0 <= bin_index < bins:
+        try:
+            # Convert compression factor key to float
+            cf = float(cf)
+        except ValueError:
+            # Skip invalid or non-numeric compression factor keys
+            print(f"Skipping invalid compression factor: {cf}")
+            continue
+
+        bin_index = None  # Initialize bin index as None
+
+        # Iterate through bin edges to find the correct bin for cf
+        for i in range(len(bin_edges) - 1):
+            if bin_edges[i] <= cf < bin_edges[i + 1]:
+                bin_index = i
+                break  # Exit loop once the bin is found
+
+        # If a valid bin is found, add the SSIM values to the corresponding bin
+        if bin_index is not None and 0 <= bin_index < bins:
             binned_ssim[bin_index].extend(ssim_values)
 
     mean_ssim, lower_ci, upper_ci = [], [], []
@@ -224,15 +240,16 @@ def Plot_Miros_Results(common_compression_factors, mean_ssim, std_ssim):
 
 def main():
     # Create_Data()
-    path_in = '/home/myron/data/'
+    path_in = './data/'
     files = [path_in+i for i in  os.listdir(path_in)]
     combined_psnr_dict, combined_compression_ratio_DCT, combined_compression_factor_dict = load_all_dicts(files)
-    # bin_centers, mean_ssim, lower_ci, upper_ci = Define_Bins_for_Compression_Factor(combined_compression_factor_dict)
+    bin_centers, mean_ssim, lower_ci, upper_ci = Define_Bins_for_Compression_Factor(combined_compression_factor_dict)
 
-    common_compression_factors, mean_ssim, std_ssim = Miros_results(combined_compression_ratio_DCT, combined_psnr_dict)
+    #common_compression_factors, mean_ssim, std_ssim = Miros_results(combined_compression_ratio_DCT, combined_psnr_dict)
 
-    Plot_Miros_Results(common_compression_factors, mean_ssim, std_ssim)
+    #Plot_Miros_Results(common_compression_factors, mean_ssim, std_ssim)
 
+    plot_results(bin_centers, mean_ssim, lower_ci, upper_ci)
 
 
 
