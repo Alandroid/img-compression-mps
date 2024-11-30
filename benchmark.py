@@ -101,7 +101,7 @@ def plot_results(compression_factors):
 
     plt.xlabel("Compression Factor (1 / Compression Ratio)")
     plt.ylabel("SSIM")
-    # plt.xlim(0, 5)
+    plt.xlim(0, 16)
     plt.title("SSIM vs. Compression Factor with Error Bars")
     plt.legend()
     plt.grid(True)
