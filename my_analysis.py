@@ -5,8 +5,6 @@ import os
 from collections import defaultdict
 from PIL import Image
 import json
-from tqdm import tqdm
-from functools import wraps
 import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
 #%%
@@ -23,7 +21,6 @@ def get_batches(path_in: str):
 
     return batches
 
-# @progress_bar_decorator(iterable_name="batch", unit="image")
 def process_batch(path_in, batch, new_size = (256*3, 256*4)):
     mps_list = []
     for i, filename in enumerate(batch):
@@ -38,7 +35,6 @@ def process_batch(path_in, batch, new_size = (256*3, 256*4)):
 
     return mps_list
 
-# @progress_bar_decorator(iterable_name="mps_list", unit="image")
 def compress_mps(mps_list, cutoff_list, limit_xaxis = 40):
     compression_ratio_DCT = defaultdict(dict)
     ssim_dict = defaultdict(dict)
@@ -252,9 +248,7 @@ def main():
     plot_results(bin_centers, mean_ssim, lower_ci, upper_ci)
 
 
-
 if __name__ == "__main__":
     main()
 
 
-# %%
