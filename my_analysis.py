@@ -136,6 +136,7 @@ def Define_Bins_for_Compression_Factor(compression_factor_dict,
     bin_centers = 0.5 * (bin_edges[:-1] + bin_edges[1:])
 
     binned_ssim = defaultdict(list)
+
     for cf, ssim_values in compression_factor_dict.items():
         try:
             # Convert compression factor key to float
