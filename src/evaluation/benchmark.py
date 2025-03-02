@@ -26,12 +26,14 @@ def load_tensors(files):
     Loads the data from the file name list.
     """
     data_list = []
+    bitsize_list = []
     for i, file in enumerate(files):
         print(f"Loading file {i+1}/{len(files)}")
         img = nib.load(file)
         img_data = img.get_fdata()
         data_list.append(img_data)
-    return data_list
+        bitsize_list.append(img_data.nbytes)
+    return data_list, bitsize_list
 
 def conv_to_mps(data_list):
     """
@@ -71,6 +73,34 @@ def calc_compression_ratio(mps_list):
         compression_ratios.append(mps.compression_ratio())
     return compression_ratios
 
+def get_storage_space_on_disk(mps_list, dtype=np.uint16):
+    """
+    Computes the storage space on disk for a list of MPS objects.
+    """
+    storage_space = []
+    for i, mps in enumerate(mps_list):
+        storage_space.append(mps.get_storage_space(dtype))
+    return storage_space
+
+def get_gzip_bytesize_on_disk(mps_list):
+    """
+    Computes the gzip bytesize on disk for a list of MPS objects.
+    """
+    gzip_bytesize = []
+    for i, mps in enumerate(mps_list):
+        gzip_bytesize.append(mps.get_bytesize_on_disk())
+    return gzip_bytesize
+
+def get_compression_ratio_on_disk_with_gzip(mps_list, dtype=np.uint16):
+    """
+    Computes the compression ratio on disk for a list of MPS objects.
+    Careful here we replace the tensor data with the integer truncated ones
+    """
+    compression_ratios = []
+    for i, mps in enumerate(mps_list):
+        compression_ratios.append(mps.compression_ratio_on_disk(dtype, replace=True))
+    return compression_ratios
+
 def benchmark_SSIM(mps_list, original_tensor_list):
     ssim_list = []
     for i, mps in enumerate(mps_list):
@@ -101,18 +131,22 @@ def get_shapes(data_list):
     return shapes
 
 def run_benchmark(mps_list, original_tensors_list, cutoff_list):
-    ssim_list = []
-    compressionratio_list = []
-    bonddim_list = []
-    compressionratio_list.append(calc_compression_ratio(mps_list))
-    ssim_list.append(benchmark_SSIM(mps_list, original_tensors_list))
+    ssim_list = [benchmark_SSIM(mps_list, original_tensors_list)]
+    compressionratio_list = [calc_compression_ratio(mps_list)]
+    bonddim_list = [get_bond_dimensions(mps_list)]
+    plain_disk_size = [get_storage_space_on_disk(mps_list)]
+    gzip_disk_size = [get_gzip_bytesize_on_disk(mps_list)]
+    compressionratio_list_disk = [get_compression_ratio_on_disk_with_gzip(mps_list)]
     for i, cutoff in enumerate(cutoff_list):
         print(i)
         compress_list(mps_list, cutoff)
         bonddim_list.append(get_bond_dimensions(mps_list))
-        ssim_list.append(benchmark_SSIM(mps_list, original_tensors_list))
         compressionratio_list.append(calc_compression_ratio(mps_list))
-    return np.array(ssim_list).T, np.array(compressionratio_list).T, bonddim_list
+        plain_disk_size.append(get_storage_space_on_disk(mps_list))
+        gzip_disk_size.append(get_gzip_bytesize_on_disk(mps_list))
+        compressionratio_list_disk.append(get_compression_ratio_on_disk_with_gzip(mps_list))
+        ssim_list.append(benchmark_SSIM(mps_list, original_tensors_list))
+    return np.array(ssim_list).T, np.array(compressionratio_list).T, np.array(bonddim_list).T, np.array(plain_disk_size).T, np.array(gzip_disk_size).T, np.array(compressionratio_list_disk).T
 
 def run_full_benchmark(Dataset_path, cutoff_list, result_file, Datatype = "MRI", start = 0, end=-1):
     results_dict = {}
@@ -123,18 +157,22 @@ def run_full_benchmark(Dataset_path, cutoff_list, result_file, Datatype = "MRI",
         files = find_specific_files(Dataset_path, ".gz")[start:end]
     results_dict["files"] = files
     if Datatype == "MRI" or Datatype == "fMRI":
-        data_list = load_tensors(files)
+        data_list, bitsize_list = load_tensors(files)
     elif Datatype == "MRI_Slice":
-        data_list = load_tensors(files)
+        data_list, bitsize_list = load_tensors(files)
         data_list = MRI_to_MRI_slices(data_list)
+    results_dict["bitsize_list"] = bitsize_list
     results_dict["shapes"] = get_shapes(data_list)
     mps_list = conv_to_mps(data_list)
     results_dict["cutoff_list"] = cutoff_list.tolist()
     print("Starting benchmark")
-    ssim_list, compressionratio_list, bonddim_list = run_benchmark(mps_list, data_list, cutoff_list)
+    ssim_list, compressionratio_list, bonddim_list, plain_disk_size, gzip_disk_size, compressionratio_list_disk = run_benchmark(mps_list, data_list, cutoff_list)
     results_dict["ssim_list"] = ssim_list.tolist()
     results_dict["compressionratio_list"] = compressionratio_list.tolist()
-    results_dict["bonddim_list"] = bonddim_list
+    results_dict["bonddim_list"] = bonddim_list.tolist()
+    results_dict["plain_disk_size"] = plain_disk_size.tolist()
+    results_dict["gzip_disk_size"] = gzip_disk_size.tolist()
+    results_dict["compressionratio_list_disk"] = compressionratio_list_disk.tolist()
     with open("src/evaluation/results/"+result_file, 'w') as fp:
         json.dump(results_dict, fp)
 

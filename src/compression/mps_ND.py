@@ -35,6 +35,7 @@ class NDMPS:
         self.qubit_size = qubit_size
         self.encoding_map = encoding_map
         self.mps = mps
+        self.dim = dim
         self.norm = norm
         self.mode = mode
         self.boundary_list = np.array(boundary_list) # contains the maximum and minimum value of each mps tensor
@@ -114,7 +115,14 @@ class NDMPS:
             qtn.tensor_compress_bond(t1, t2, cutoff = cutoff, cutoff_mode = "rel") 
         self.update_boundary_list()
     
-    def continuous_compress(self, cutoff, print_ratio = True):
+    def continuous_compress(self, cutoff: float, print_ratio: bool = True):
+        """
+        Performs continuous compression at different cutoff levels.
+        
+        Args:
+            cutoff (float): Base cutoff value.
+            print_ratio (bool, optional): Whether to print compression ratio. Defaults to True.
+        """
         compress_list = np.array([0.01, 0.05, 0.1, 0.2, 0.5, 0.8, 1]) * cutoff
         for c in compress_list:
             self.compress(c)
@@ -182,14 +190,20 @@ class NDMPS:
             self.mps.arrays[i][:] = tensorlist[i] #replace quimb tensors with the new tensors
         self.update_boundary_list()
 
+    def return_tensors_data(self):
+        """
+        Returns the data of the tensors in the MPS
+        """
+        return [t for t in self.mps.arrays]
 
-    def get_bytesize_on_disk(self, dtype=np.uint16):
+    def get_bytesize_on_disk(self, dtype=np.uint16, replace = False):
         """
         Returns the bytesize of the MPS on disk with gzip compression
         If this function is called also integer truncation to this datatype is performed!!!
+        Ideallly the same bytesize as the original tensor should be used
         """
 
-        tensor_int_list = self.compress_to_dtype(dtype)
+        tensor_int_list = self.compress_to_dtype(dtype, replace) # Compresses the MPS tensors to a specific dtype if replace is true
         compressed_bytesize = 0
         for i in np.arange(len(tensor_int_list)):
             array_bytes = tensor_int_list[i].tobytes()
@@ -199,32 +213,38 @@ class NDMPS:
             compressed_data = buffer.getvalue()
             compressed_size = len(compressed_data)
             compressed_bytesize += compressed_size
-        return compressed_bytesize
+        return compressed_bytesize # Returns the bytesize of the MPS on disk with gzip compression
     
 
-    def compression_ratio_on_disk(self, dtype=np.uint16):
+    def compression_ratio_on_disk(self, dtype=np.uint16, replace = False):
         """
         Returns the compression ratio on disk
-        When this funciton is called also integer truncation is performed
+        When this funciton is called also integer truncation is performed!!!
         """
         initial_N = np.prod(self.qubit_size) * get_num_bits(dtype) / 8
-        compressed_N = self.get_bytesize_on_disk(dtype)
+        compressed_N = self.get_bytesize_on_disk(dtype, replace)
         return compressed_N / initial_N
         
 
 
-    def compress_to_dtype(self, dtype=np.uint16):
+    def compress_to_dtype(self, dtype=np.uint16, replace = False):
         """
-        Compresses the MPS to a specific dtype.
+        Compresses the MPS tensors to a specific dtype
+        For example replacing float64 numbers with uint16 and performing integer truncation
+
+        dtype: datatype to be used for Integer truncatition
+        replace: If True the tensors in the MPS are replaced with the Integer truncated tensors
         """
         tensor_int_list = [scale_to_dtype(t, dtype) for t in self.mps.arrays]
         scaled_back_tensors = [scale_back(t, b[0], b[1], dtype) for t, b in zip(tensor_int_list, self.boundary_list)]
-        self.replace_tensordata(scaled_back_tensors)
+        if replace:
+            self.replace_tensordata(scaled_back_tensors)
         return tensor_int_list
 
     def get_storage_space(self, dtype=np.uint16, p = False):
         """
         Returns the storage space in bytes on the disk without gzip compression
+        dtype: datatype to be used for calculating the storage space on the disk
         """
 
         storage_space = self.number_elements_in_MPS() * get_num_bits(dtype) / 8

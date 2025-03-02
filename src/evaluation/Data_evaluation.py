@@ -31,9 +31,9 @@ from src.evaluation.benchmark import run_full_benchmark
 #%%
 D_path = '/Users/maxge/Documents/Studium/München/02_SS 2024/QEL/Block encoding generalization/img-compression-mps/Data/fMRI_Datatset'
 #D_path = '/Users/maxge/Documents/Studium/München/02_SS 2024/QEL/Block encoding generalization/img-compression-mps/Data/fMRI_Datatset'
-cutoff_list = np.linspace(0, 0.1, 1)[1:]
+cutoff_list = np.linspace(0, 0.1, 10)[1:]
 #run_full_benchmark_3D(D_path, cutoff_list, 'results_dict_test.json')
-run_full_benchmark(D_path, cutoff_list, 'results_fMRI_test_test_1.json', "fMRI", 0, 1)
+run_full_benchmark(D_path, cutoff_list, 'results_fMRI_extended_json_test.json', "fMRI", 0, 1)
 
 # %%
 
