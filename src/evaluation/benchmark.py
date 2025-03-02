@@ -1,16 +1,15 @@
-#%%
-import sys
-sys.path.insert(0, '/Users/maxge/Documents/Studium/München/02_SS 2024/QEL/Block encoding generalization/img-compression-mps/src/compression')
 
-from mps_ND import NDMPS
+import sys
+import os
+from src.compression.mps_ND import NDMPS
 import nibabel as nib
 import numpy as np
 import matplotlib.pyplot as plt
 import os
-import utils_ND as ut
+import src.compression.utils_ND as ut
 import pickle
 import json
-#%%
+
 def find_specific_files(directory_path, file_extension=None):
     """
     Finds all files in a directory with a specific file extension.
@@ -46,6 +45,9 @@ def conv_to_mps(data_list):
     return mps_list
 
 def conv_to_tensors(mps_list):
+    """
+    Converts a list of MPS objects back to tensors.
+    """
     data_list = []
     for i, mps in enumerate(mps_list):
         print(f"Converting file {i+1}/{len(mps_list)}")
@@ -54,11 +56,16 @@ def conv_to_tensors(mps_list):
     return data_list
 
 def compress_list(mps_list, compression_factors):
+    """
+    Applies compression to a list of MPS objects.
+    """
     for mps in mps_list:
         mps.compress(compression_factors)
-    return None
 
 def calc_compression_ratio(mps_list):
+    """
+    Computes the compression ratio for a list of MPS objects.
+    """
     compression_ratios = []
     for i, mps in enumerate(mps_list):
         compression_ratios.append(mps.compression_ratio())
@@ -76,12 +83,18 @@ def benchmark_SSIM(mps_list, original_tensor_list):
     return ssim_list
 
 def get_bond_dimensions(mps_list):
+    """
+    Retrieves bond dimensions for a list of MPS objects.
+    """
     bond_dimensions = []
     for mps in mps_list:
         bond_dimensions.append(mps.bond_sizes())
     return bond_dimensions
 
 def get_shapes(data_list):
+    """
+    Retrieves the shapes of tensors in a list.
+    """
     shapes = []
     for data in data_list:
         shapes.append(data.shape)
@@ -122,7 +135,7 @@ def run_full_benchmark(Dataset_path, cutoff_list, result_file, Datatype = "MRI",
     results_dict["ssim_list"] = ssim_list.tolist()
     results_dict["compressionratio_list"] = compressionratio_list.tolist()
     results_dict["bonddim_list"] = bonddim_list
-    with open("results/"+result_file, 'w') as fp:
+    with open("src/evaluation/results/"+result_file, 'w') as fp:
         json.dump(results_dict, fp)
 
 
@@ -133,18 +146,3 @@ def MRI_to_MRI_slices(data_list):
         img_data_list.append(data[:, data.shape[1]//2, :])
         img_data_list.append(data[:, :, data.shape[2]//2])
     return img_data_list
-
-
-def save_object(obj, filename):
-    with open(filename, 'wb') as outp:  # Overwrites any existing file.
-        pickle.dump(obj, outp, pickle.HIGHEST_PROTOCOL)
-
-
-#%%
-D_path = '/Users/maxge/Documents/Studium/München/02_SS 2024/QEL/Block encoding generalization/img-compression-mps/Data/fMRI_Datatset'
-#D_path = '/Users/maxge/Documents/Studium/München/02_SS 2024/QEL/Block encoding generalization/img-compression-mps/Data/fMRI_Datatset'
-cutoff_list = np.linspace(0, 0.1, 10)[1:]
-#run_full_benchmark_3D(D_path, cutoff_list, 'results_dict_test.json')
-run_full_benchmark(D_path, cutoff_list, 'results_fMRI_test_test.json', "fMRI", 0, 2)
-
-# %%

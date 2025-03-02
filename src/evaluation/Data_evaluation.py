@@ -1,8 +1,40 @@
+"""
+This is a notebook to run the benchmarks and evaluate the data at the same time
+"""
+
+
 #%%
 import json
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
+from pathlib import Path
+
+# Automatically find the project root (assumes "src" is in the project)
+current_file = Path(__file__).resolve() if '__file__' in locals() else Path.cwd()
+project_root = current_file
+while not (project_root / "src").exists() and project_root != project_root.parent:
+    project_root = project_root.parent
+
+# Ensure we found the correct project root
+if not (project_root / "src").exists():
+    raise FileNotFoundError("Could not find project root containing 'src' directory.")
+
+# Set the working directory to the project root
+os.chdir(project_root)
+
+
+
+from src.evaluation.benchmark import run_full_benchmark
+
+#%%
+D_path = '/Users/maxge/Documents/Studium/München/02_SS 2024/QEL/Block encoding generalization/img-compression-mps/Data/fMRI_Datatset'
+#D_path = '/Users/maxge/Documents/Studium/München/02_SS 2024/QEL/Block encoding generalization/img-compression-mps/Data/fMRI_Datatset'
+cutoff_list = np.linspace(0, 0.1, 1)[1:]
+#run_full_benchmark_3D(D_path, cutoff_list, 'results_dict_test.json')
+run_full_benchmark(D_path, cutoff_list, 'results_fMRI_test_test_1.json', "fMRI", 0, 1)
+
 # %%
 
 def calc_mean_std(dict):

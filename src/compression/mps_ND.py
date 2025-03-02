@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import quimb.tensor as qtn
-from utils_ND import *
+from src.compression.utils_ND import *
 import gzip
 import io
 from scipy.fftpack import dct, idct
@@ -18,21 +18,42 @@ def time_function(func):
 
 
 class NDMPS:
-    def __init__(self, mps=None, qubit_size=None, encoding_map=None, boundary_list = None, norm=True, mode="Std", dim = None):
+    def __init__(self, mps: qtn.MatrixProductState = None, qubit_size: tuple = None, encoding_map: np.ndarray = None, 
+                 boundary_list: list = None,norm: bool = True, mode: str = "Std", dim: int = None):
+        """
+        Initializes the NDMPS class.
+        
+        Args:
+            mps (qtn.MatrixProductState, optional): MPS representation.
+            qubit_size (tuple, optional): Size of the qubit encoding.
+            encoding_map (np.ndarray, optional): Encoding map.
+            norm (bool, optional): Whether to normalize data. Defaults to True.
+            mode (str, optional): Compression mode, "Std" or "DCT". Defaults to "Std".
+            encoding_scheme (str, optional): Encoding method: "rowmajor", "snake", or "hierarchical". Defaults to "hierarchical".
+            dim (int, optional): Dimensionality of input tensor.
+        """
         self.qubit_size = qubit_size
         self.encoding_map = encoding_map
         self.mps = mps
-        self.norm = norm #Normalize matrix data
-        #Compression mode 
-        # "Std" standard Block Encoding
-        # "DCT" discrete cosine fourier transform before compression
-        self.mode = mode 
-        self.dim = dim
+        self.norm = norm
+        self.mode = mode
         self.boundary_list = np.array(boundary_list) # contains the maximum and minimum value of each mps tensor
     
     @classmethod
     # @time_function
-    def from_tensor(cls, tensor, norm = False, mode = "Std"):
+    def from_tensor(cls, tensor: np.ndarray, norm: bool = False, mode: str = "Std") -> "NDMPS":
+        """
+        Creates an NDMPS instance from a tensor with specified encoding scheme.
+        
+        Args:
+            tensor (np.ndarray): Input tensor.
+            norm (bool, optional): Whether to normalize the tensor. Defaults to False.
+            mode (str, optional): Compression mode, "Std" or "DCT". Defaults to "Std".
+            encoding_scheme (str, optional): Encoding method: "rowmajor", "snake", or "hierarchical". Defaults to "hierarchical".
+        
+        Returns:
+            NDMPS: Instance of NDMPS class.
+        """
         qubit_size, encoding_map = gen_encoding_map(tensor.shape)
         encoding_map = np.moveaxis(encoding_map, 0, -1)
 

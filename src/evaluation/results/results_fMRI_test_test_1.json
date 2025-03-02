@@ -1,0 +1,1 @@
+{"Datatype": "fMRI", "files": ["/Users/maxge/Documents/Studium/M\u00fcnchen/02_SS 2024/QEL/Block encoding generalization/img-compression-mps/Data/fMRI_Datatset/sub-09_task-Dualtaskweatherprediction_run-01_bold.nii.gz"], "shapes": [[64, 64, 30, 208]], "cutoff_list": [], "ssim_list": [[0.9976254334139099]], "compressionratio_list": [[1.0107772435897435]], "bonddim_list": []}
