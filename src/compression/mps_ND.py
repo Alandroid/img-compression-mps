@@ -2,6 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import quimb.tensor as qtn
 from utils_ND import *
+import gzip
+import io
 from scipy.fftpack import dct, idct
 import time
 
@@ -16,7 +18,7 @@ def time_function(func):
 
 
 class NDMPS:
-    def __init__(self, mps=None, qubit_size=None, encoding_map=None, norm=True, mode="Std", dim = None):
+    def __init__(self, mps=None, qubit_size=None, encoding_map=None, boundary_list = None, norm=True, mode="Std", dim = None):
         self.qubit_size = qubit_size
         self.encoding_map = encoding_map
         self.mps = mps
@@ -26,6 +28,7 @@ class NDMPS:
         # "DCT" discrete cosine fourier transform before compression
         self.mode = mode 
         self.dim = dim
+        self.boundary_list = np.array(boundary_list) # contains the maximum and minimum value of each mps tensor
     
     @classmethod
     # @time_function
@@ -52,14 +55,25 @@ class NDMPS:
         
         # Create MPS
         mps = qtn.MatrixProductState.from_dense(contracted_tensor, dims = tuple(qubit_size))
+        boundary_list = []
+        for arr in mps.arrays:
+            boundary_list.append([np.min(arr), np.max(arr)])
+        
+        mps.arrays
 
-        return cls(mps, qubit_size, encoding_map, norm, mode, len(np.shape(tensor)))
+        return cls(mps, qubit_size, encoding_map, boundary_list, norm, mode, len(np.shape(tensor)))
+
+
+    def update_boundary_list(self):
+        boundary_list = []
+        for arr in self.mps.arrays:
+            boundary_list.append([np.min(arr), np.max(arr)])
+        self.boundary_list = np.array(boundary_list)
 
     # @time_function
     def compression_ratio(self):
         initial_N = np.prod(self.qubit_size)
         compressed_N = self.number_elements_in_MPS()
-        # TODO: also implement the compression rate in bits / bits
         return compressed_N / initial_N
         
     # @time_function
@@ -77,6 +91,8 @@ class NDMPS:
             t2 = self.mps[i] # Tensor 2
             # Compress bond according to percentage * bond dimension
             qtn.tensor_compress_bond(t1, t2, cutoff = cutoff, cutoff_mode = "rel") 
+        self.update_boundary_list()
+    
     def continuous_compress(self, cutoff, print_ratio = True):
         compress_list = np.array([0.01, 0.05, 0.1, 0.2, 0.5, 0.8, 1]) * cutoff
         for c in compress_list:
@@ -135,3 +151,62 @@ class NDMPS:
         Returns the bond dimensions
         """
         return self.mps.bond_sizes()
+    
+    def replace_tensordata(self, tensorlist):
+        """
+        Replaces the Tensor Data in the MPS tensors with the tensors in the tensorlist
+        """
+        for i in range(len(self.mps.arrays)):
+            assert self.mps.arrays[i].shape == tensorlist[i].shape #check whether they have the same shape
+            self.mps.arrays[i][:] = tensorlist[i] #replace quimb tensors with the new tensors
+        self.update_boundary_list()
+
+
+    def get_bytesize_on_disk(self, dtype=np.uint16):
+        """
+        Returns the bytesize of the MPS on disk with gzip compression
+        If this function is called also integer truncation to this datatype is performed!!!
+        """
+
+        tensor_int_list = self.compress_to_dtype(dtype)
+        compressed_bytesize = 0
+        for i in np.arange(len(tensor_int_list)):
+            array_bytes = tensor_int_list[i].tobytes()
+            buffer = io.BytesIO()
+            with gzip.GzipFile(fileobj=buffer, mode='wb') as gz_file:
+                gz_file.write(array_bytes)
+            compressed_data = buffer.getvalue()
+            compressed_size = len(compressed_data)
+            compressed_bytesize += compressed_size
+        return compressed_bytesize
+    
+
+    def compression_ratio_on_disk(self, dtype=np.uint16):
+        """
+        Returns the compression ratio on disk
+        When this funciton is called also integer truncation is performed
+        """
+        initial_N = np.prod(self.qubit_size) * get_num_bits(dtype) / 8
+        compressed_N = self.get_bytesize_on_disk(dtype)
+        return compressed_N / initial_N
+        
+
+
+    def compress_to_dtype(self, dtype=np.uint16):
+        """
+        Compresses the MPS to a specific dtype.
+        """
+        tensor_int_list = [scale_to_dtype(t, dtype) for t in self.mps.arrays]
+        scaled_back_tensors = [scale_back(t, b[0], b[1], dtype) for t, b in zip(tensor_int_list, self.boundary_list)]
+        self.replace_tensordata(scaled_back_tensors)
+        return tensor_int_list
+
+    def get_storage_space(self, dtype=np.uint16, p = False):
+        """
+        Returns the storage space in bytes on the disk without gzip compression
+        """
+
+        storage_space = self.number_elements_in_MPS() * get_num_bits(dtype) / 8
+        if p:
+            print("The storage space is approximately: ", storage_space/1024, "KB")
+        return storage_space

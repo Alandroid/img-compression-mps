@@ -145,6 +145,6 @@ D_path = '/Users/maxge/Documents/Studium/München/02_SS 2024/QEL/Block encoding 
 #D_path = '/Users/maxge/Documents/Studium/München/02_SS 2024/QEL/Block encoding generalization/img-compression-mps/Data/fMRI_Datatset'
 cutoff_list = np.linspace(0, 0.1, 10)[1:]
 #run_full_benchmark_3D(D_path, cutoff_list, 'results_dict_test.json')
-run_full_benchmark(D_path, cutoff_list, 'results_fMRI_test.json', "fMRI", 0, 5)
+run_full_benchmark(D_path, cutoff_list, 'results_fMRI_test_test.json', "fMRI", 0, 2)
 
 # %%

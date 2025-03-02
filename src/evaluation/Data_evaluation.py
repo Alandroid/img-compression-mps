@@ -17,7 +17,7 @@ def calc_mean_std(dict):
         interpolated_ssim.append(interp_func(common_comp_facs))
     return np.mean(interpolated_ssim, axis = 0), np.std(interpolated_ssim, axis = 0), np.array(common_comp_facs)
 #%%
-with open("results/results_dict_MRI_SLICE_1.json", "r") as f:
+with open("/Users/maxge/Documents/Studium/München/02_SS 2024/QEL/Block encoding generalization/img-compression-mps/src/evaluation/results/results_dict_MRI_Slice_1.json", "r") as f:
     results_Slice = json.load(f)
 
 # %%

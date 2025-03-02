@@ -5,8 +5,6 @@ from functools import reduce
 from operator import mul
 import time
 
-# Initialize cache
-encoding_map_cache = {}
 
 def time_function(func):
     def wrapper(*args, **kwargs):
@@ -145,3 +143,33 @@ def avg_SSIM_4D(orginal, compressed):
     for i in range(orginal.shape[-1]):
         ssims.append(avg_SSIM_3D(orginal[:,:,:,i], compressed[:,:,:,i]))
     return np.mean(ssims)
+
+
+
+def scale_to_dtype(data, dtype=np.uint8):
+    """
+    Scale the data to dtype for and does integer truncation.
+    This class only works for unsigned integer types.
+    """
+    data = data - np.min(data)
+    data = data / np.max(data)
+    data = (data * np.iinfo(dtype).max).astype(dtype)
+    return data
+
+def scale_back(data, min, max, dtype=np.uint8):
+    """
+    Scale the image back to its original range.
+    """
+    data = data / np.iinfo(dtype).max
+    data = data * (max - min)
+    data = data + min
+    return data
+
+def get_num_bits(dtype):
+    dtype = np.dtype(dtype)  # Ensure it's a NumPy dtype
+    if np.issubdtype(dtype, np.integer):
+        return np.iinfo(dtype).bits
+    elif np.issubdtype(dtype, np.floating):
+        return np.finfo(dtype).bits
+    else:
+        raise ValueError(f"Unsupported data type: {dtype}")
