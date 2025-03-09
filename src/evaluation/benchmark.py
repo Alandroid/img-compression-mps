@@ -11,7 +11,7 @@ project_folder = os.path.dirname(os.path.dirname(os.path.dirname(current_path)))
 sys.path.append(project_folder)
 
 from src.compression.mps_ND import NDMPS
-import src.compression.utils_ND as ut
+from src.compression.utils_ND import compute_ssim
 
 
 def find_specific_files(directory_path, file_extension=None):
@@ -40,14 +40,14 @@ def load_tensors(files):
     return data_list
 
 
-def conv_to_mps(data_list, encoding_scheme="hierarchical"):
+def conv_to_mps(data_list, encoding_scheme="hierarchical", dct_level: int = -1):
     """
     Converts the data list to a list of MPS objects.
     """
     mps_list = []
     for i, data in enumerate(data_list):
         print(f"Converting file {i + 1}/{len(data_list)}")
-        mps = NDMPS.from_tensor(data, norm=False, mode="DCT", encoding_scheme=encoding_scheme)
+        mps = NDMPS.from_tensor(data, norm=False, mode="DCT", encoding_scheme=encoding_scheme, dct_level=dct_level)
         mps_list.append(mps)
     return mps_list
 
@@ -98,14 +98,39 @@ def benchmark_ssim(mps_list: list, original_tensor_list: list):
         if tensor.shape != original_tensor_list[i].shape:
             tensor = np.resize(tensor, original_tensor_list[i].shape)
 
-        func_map = {
-            4: ut.avg_SSIM_4D,
-            3: ut.avg_SSIM_3D,
-            2: ut.compute_ssim_2D
-        }
-        ssim_list.append(func_map.get(original_tensor_list[i].ndim, lambda x, y: None)(tensor, original_tensor_list[i]))
+        ssim_list.append(compute_ssim(tensor, original_tensor_list[i]))
     
     return ssim_list
+
+    
+# TODO: old version of the function
+# def benchmark_ssim(mps_list: list, original_tensor_list: list):
+#     """
+#     Computes the Structural Similarity Index (SSIM) between compressed and original tensors.
+
+#     Args:
+#         mps_list (list): List of MPS objects.
+#         original_tensor_list (list): List of original tensor data.
+
+#     Returns:
+#         list: List of SSIM values.
+#     """
+#     ssim_list = []
+#     for i, mps in enumerate(mps_list):
+#         tensor = mps.to_tensor()
+
+#         # Ensure tensors have the same shape before SSIM computation
+#         if tensor.shape != original_tensor_list[i].shape:
+#             tensor = np.resize(tensor, original_tensor_list[i].shape)
+
+#         func_map = {
+#             4: ut.avg_SSIM_4D,
+#             3: ut.avg_SSIM_3D,
+#             2: ut.compute_ssim_2D
+#         }
+#         ssim_list.append(func_map.get(original_tensor_list[i].ndim, lambda x, y: None)(tensor, original_tensor_list[i]))
+    
+#     return ssim_list
 
 
 def get_bond_dimensions(mps_list):
@@ -192,6 +217,7 @@ def run_full_benchmark(
         json.dump(results_dict, fp)
 
 
+# TODO: do still need this?
 def mri_to_mri_slices(data_list: list):
     """
     Extracts central slices from 3D MRI scans.
