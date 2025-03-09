@@ -146,7 +146,7 @@ def run_benchmark(mps_list, original_tensors_list, cutoff_list):
         gzip_disk_size.append(get_gzip_bytesize_on_disk(mps_list))
         compressionratio_list_disk.append(get_compression_ratio_on_disk_with_gzip(mps_list))
         ssim_list.append(benchmark_SSIM(mps_list, original_tensors_list))
-    return np.array(ssim_list).T, np.array(compressionratio_list).T, np.array(bonddim_list).T, np.array(plain_disk_size).T, np.array(gzip_disk_size).T, np.array(compressionratio_list_disk).T
+    return np.array(ssim_list).T, np.array(compressionratio_list).T, bonddim_list, np.array(plain_disk_size).T, np.array(gzip_disk_size).T, np.array(compressionratio_list_disk).T
 
 def run_full_benchmark(Dataset_path, cutoff_list, result_file, Datatype = "MRI", start = 0, end=-1):
     results_dict = {}
@@ -169,7 +169,7 @@ def run_full_benchmark(Dataset_path, cutoff_list, result_file, Datatype = "MRI",
     ssim_list, compressionratio_list, bonddim_list, plain_disk_size, gzip_disk_size, compressionratio_list_disk = run_benchmark(mps_list, data_list, cutoff_list)
     results_dict["ssim_list"] = ssim_list.tolist()
     results_dict["compressionratio_list"] = compressionratio_list.tolist()
-    results_dict["bonddim_list"] = bonddim_list.tolist()
+    results_dict["bonddim_list"] = bonddim_list
     results_dict["plain_disk_size"] = plain_disk_size.tolist()
     results_dict["gzip_disk_size"] = gzip_disk_size.tolist()
     results_dict["compressionratio_list_disk"] = compressionratio_list_disk.tolist()
