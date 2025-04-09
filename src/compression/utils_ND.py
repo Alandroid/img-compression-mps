@@ -145,6 +145,18 @@ def avg_SSIM_4D(orginal, compressed):
     return np.mean(ssims)
 
 
+def calc_PSNR(original, compressed):
+    """
+    Calculate the Peak Signal-to-Noise Ratio (PSNR) between two tensors in general.
+    original: The original tensor.
+    compressed: The compressed tensor.
+    """
+    MSE = np.mean((original - compressed) ** 2)
+    if MSE == 0:
+        return np.inf
+    PSNR = 10 * np.log10((np.max(original) ** 2) / MSE)
+    return PSNR
+
 
 def scale_to_dtype(data, dtype=np.uint8):
     """

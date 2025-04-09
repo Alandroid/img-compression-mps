@@ -32,11 +32,12 @@ from src.evaluation.benchmark import run_full_benchmark
 """
 This one is for MRI images
 """
+D_path = "Data/MRI Dataset"
 #D_path = '/Users/maxge/Documents/Studium/München/02_SS 2024/QEL/Block encoding generalization/img-compression-mps/Data/fMRI_Datatset'
-D_path = D_path = '/Users/maxge/Documents/Studium/München/02_SS 2024/QEL/Block encoding generalization/img-compression-mps/Data/MRI Dataset'
+#D_path = '/Users/maxge/Documents/Studium/München/02_SS 2024/QEL/Block encoding generalization/img-compression-mps/Data/fMRI_Datatset'
 #run_full_benchmark_3D(D_path, cutoff_list, 'results_dict_test.json')
-cutoff_list = np.linspace(0, 0.1, 100)[1:]
-run_full_benchmark(D_path, cutoff_list, 'MRI_5_to_10_100_steps_to_01_test.json', "MRI", 5, 10)
+cutoff_list = np.linspace(0, 0.1, 10)[1:]
+run_full_benchmark(D_path, cutoff_list, 'MRI_0_1_10steps_to_0.1_PSNR_test.json', "MRI", 0, 1)
 
 # %%
 """
@@ -44,7 +45,7 @@ This one is for MRI slices
 """
 D_path = D_path = '/Users/maxge/Documents/Studium/München/02_SS 2024/QEL/Block encoding generalization/img-compression-mps/Data/MRI Dataset'
 #run_full_benchmark_3D(D_path, cutoff_list, 'results_dict_test.json')
-cutoff_list = np.linspace(0, 0.2, 100)[1:]
-run_full_benchmark(D_path, cutoff_list, 'MRI_slice_0_to_13_100_steps_to_02.json', "MRI_Slice", 0, 13)
+cutoff_list = np.linspace(0, 0.3, 100)[1:]
+run_full_benchmark(D_path, cutoff_list, 'MRI_slice_0_to_13_100_steps_to_03.json', "MRI_Slice", 0, 13)
 
 # %%

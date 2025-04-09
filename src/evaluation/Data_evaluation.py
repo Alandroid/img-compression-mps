@@ -1,5 +1,5 @@
 """
-This is a notebook to run the benchmarks and evaluate the data at the same time
+This is a notebook to plot and evaluate the json files which contain the benchmark results.
 """
 
 
@@ -32,6 +32,7 @@ from src.evaluation.benchmark import run_full_benchmark
 def calc_mean_std(dict, num_common_points):
     ssims = np.array(dict["ssim_list"])
     comps = np.array(dict["compressionratio_list"])
+    shapes = np.array(dict["shapes"])
     max_common_fac = np.min(1/comps[:,-1])
     min_common_fac = np.max(1/comps[:,0])
     common_comp_facs = np.linspace(min_common_fac, max_common_fac, num_common_points)
