@@ -36,8 +36,8 @@ D_path = "Data/pedestrians"
 #D_path = '/Users/maxge/Documents/Studium/München/02_SS 2024/QEL/Block encoding generalization/img-compression-mps/Data/fMRI_Datatset'
 #D_path = '/Users/maxge/Documents/Studium/München/02_SS 2024/QEL/Block encoding generalization/img-compression-mps/Data/fMRI_Datatset'
 
-cutoff_list = np.linspace(0, 0.1, 10)[1:]
-run_full_benchmark(D_path, cutoff_list, 'Pedestrians_test_0_1_10steps_to_0p1_DCT.json', "Video", "DCT", 0, 1, ".npz", shape = (200,144,216))
+cutoff_list = np.linspace(0, 0.1, 100)[1:]
+run_full_benchmark(D_path, cutoff_list, 'Pedestrians_0_10_100steps_to_0p1_DCT.json', "Video", "DCT", 0, 10, ".npz", shape = (200,144,216))
 
 # %%
 """
