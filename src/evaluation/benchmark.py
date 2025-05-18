@@ -40,7 +40,7 @@ def find_specific_files(directory_path, file_extension=None):
                 files.append(os.path.join(root, filename))
     return files
 
-def load_tensors(files):
+def load_tensors(files, ending, shape = None):
     """Loads tensor data from a list of file paths.
 
     Args:
@@ -55,14 +55,61 @@ def load_tensors(files):
         - The function uses the `nibabel` library to load the data from the files.
         - Each file is expected to contain data compatible with `nibabel`.
         - The function prints progress information during the loading process."""
-    data_list = []
-    bitsize_list = []
-    for i, file in enumerate(files):
-        print(f"Loading file {i+1}/{len(files)}")
-        img = nib.load(file)
-        img_data = img.get_fdata()
-        data_list.append(img_data)
-        bitsize_list.append(img_data.nbytes)
+    # if len(shape) > 3:
+    #     assert "UNSUPORTED TENSOR SHAPE IN benchmark.py"
+
+    if shape is None:
+        if '.gz' in ending:
+            data_list = []
+            bitsize_list = []
+            for i, file in enumerate(files):
+                print(f"Loading file {i+1}/{len(files)}")
+                img = nib.load(file)
+                img_data = img.get_fdata()
+                data_list.append(img_data)
+                bitsize_list.append(img_data.nbytes)
+
+        elif '.npz' in ending:
+            data_list = []
+            bitsize_list = []
+            for i, file in enumerate(files):
+                print(f"Loading file {i+1}/{len(files)}")
+                img = np.load(file)
+                img_data = img['sequence']
+                data_list.append(img_data)
+                bitsize_list.append(ut.get_num_bits(img_data.dtype))
+        
+        else:
+            assert('Error in benchmark.py: Unsuported file ')
+    
+    else:
+        B, H, W = shape
+        if files.endswith('.gz'):
+            data_list = []
+            bitsize_list = []
+            for i, file in enumerate(files):
+                print(f"Loading file {i+1}/{len(files)}")
+                img = nib.load(file)
+                img_data = img.get_fdata()
+                img_data = img_data[:B, :H, :W]
+                data_list.append(img_data)
+                bitsize_list.append(img_data.nbytes)
+
+        elif files.endswith('.npz'):
+            data_list = []
+            bitsize_list = []
+            for i, file in enumerate(files):
+                print(f"Loading file {i+1}/{len(files)}")
+                img = np.load(file)
+                img_data = img['sequence']
+                img_data = img_data[:B, :H, :W]
+                data_list.append(img_data)
+                bitsize_list.append(ut.get_num_bits(img_data.dtype))
+        else:
+            assert('Error in benchmark.py: Unsuported file ')
+
+
+
     return data_list, bitsize_list
 
 def conv_to_mps(data_list, mode = "DCT"):
@@ -337,48 +384,47 @@ def run_benchmark(mps_list, original_tensors_list, cutoff_list):
         multidimensional_SSIM.append(get_multidimensional_SSIM(mps_list, original_tensors_list))
     return np.array(ssim_list).T, np.array(compressionratio_list).T, bonddim_list, np.array(plain_disk_size).T, np.array(gzip_disk_size).T, np.array(compressionratio_list_disk).T, np.array(PSNR_list_general).T, np.array(multidimensional_SSIM).T
 
-def run_full_benchmark(Dataset_path, cutoff_list, result_file, Datatype = "MRI", start = 0, end=-1):
-    def run_full_benchmark(Dataset_path, cutoff_list, result_file, Datatype="MRI", start=0, end=-1):
-        """
-        Runs a full benchmark on a dataset of tensors, evaluating compression performance 
-        using matrix product states (MPS) and saving the results to a JSON file.
+def run_full_benchmark(Dataset_path, cutoff_list, result_file, ending, Datatype = "MRI", start = 0, end=-1):
+    """
+    Runs a full benchmark on a dataset of tensors, evaluating compression performance 
+    using matrix product states (MPS) and saving the results to a JSON file.
 
-        Args:
-            Dataset_path (str): Path to the dataset directory containing the files to process.
-            cutoff_list (list): List of cutoff values to use for MPS compression.
-            result_file (str): Name of the JSON file where the benchmark results will be saved.
-            Datatype (str, optional): Type of data in the dataset. Options are "MRI", "fMRI", or "MRI_Slice". 
-                                      Defaults to "MRI".
-            start (int, optional): Starting index for selecting files from the dataset. Defaults to 0.
-            end (int, optional): Ending index for selecting files from the dataset. Use -1 to include all files 
-                                 from the starting index. Defaults to -1.
+    Args:
+        Dataset_path (str): Path to the dataset directory containing the files to process.
+        cutoff_list (list): List of cutoff values to use for MPS compression.
+        result_file (str): Name of the JSON file where the benchmark results will be saved.
+        Datatype (str, optional): Type of data in the dataset. Options are "MRI", "fMRI", or "MRI_Slice". 
+                                    Defaults to "MRI".
+        start (int, optional): Starting index for selecting files from the dataset. Defaults to 0.
+        end (int, optional): Ending index for selecting files from the dataset. Use -1 to include all files 
+                                from the starting index. Defaults to -1.
 
-        Returns:
-            None: The function saves the benchmark results to a JSON file and does not return any value.
+    Returns:
+        None: The function saves the benchmark results to a JSON file and does not return any value.
 
-        Notes:
-            - The function processes files with the ".gz" extension.
-            - For "MRI_Slice" datatype, the MRI data is converted to slices before processing.
-            - The benchmark evaluates metrics such as SSIM, compression ratio, bond dimensions, 
-              and disk sizes (plain and gzip-compressed).
-            - Results are stored in a dictionary and serialized to a JSON file in the 
-              "src/evaluation/results/" directory.
+    Notes:
+        - The function processes files with the ".gz" extension.
+        - For "MRI_Slice" datatype, the MRI data is converted to slices before processing.
+        - The benchmark evaluates metrics such as SSIM, compression ratio, bond dimensions, 
+            and disk sizes (plain and gzip-compressed).
+        - Results are stored in a dictionary and serialized to a JSON file in the 
+            "src/evaluation/results/" directory.
 
-        Raises:
-            FileNotFoundError: If the specified dataset path or result file path is invalid.
-            ValueError: If invalid datatype is provided or if other input arguments are incorrect.
-        """
+    Raises:
+        FileNotFoundError: If the specified dataset path or result file path is invalid.
+        ValueError: If invalid datatype is provided or if other input arguments are incorrect.
+    """
     results_dict = {}
     results_dict["Datatype"] = Datatype
     if end == -1:
-        files = find_specific_files(Dataset_path, ".gz")[start:]
+        files = find_specific_files(Dataset_path, ending)[start:]
     else:
-        files = find_specific_files(Dataset_path, ".gz")[start:end]
+        files = find_specific_files(Dataset_path, ending)[start:end]
     results_dict["files"] = files
     if Datatype == "MRI" or Datatype == "fMRI":
-        data_list, bitsize_list = load_tensors(files)
+        data_list, bitsize_list = load_tensors(files, ending=ending)
     elif Datatype == "MRI_Slice":
-        data_list, bitsize_list = load_tensors(files)
+        data_list, bitsize_list = load_tensors(files, ending=ending)
         data_list = MRI_to_MRI_slices(data_list)
     results_dict["bitsize_list"] = bitsize_list
     results_dict["shapes"] = get_shapes(data_list)
