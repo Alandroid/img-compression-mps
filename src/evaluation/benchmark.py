@@ -41,7 +41,33 @@ def find_specific_files(directory_path, file_extension=None):
                 files.append(os.path.join(root, filename))
     return files
 
-def load_tensors(files):
+"""def load_tensors(files):
+    Loads tensor data from a list of file paths.
+
+    Args:
+        files (list of str): A list of file paths pointing to the data files to be loaded.
+
+    Returns:
+        tuple: A tuple containing:
+            - data_list (list of numpy.ndarray): A list of loaded tensor data arrays.
+            - bitsize_list (list of int): A list of the sizes (in bytes) of the loaded data arrays.
+
+    Notes:
+        - The function uses the `nibabel` library to load the data from the files.
+        - Each file is expected to contain data compatible with `nibabel`.
+        - The function prints progress information during the loading process.
+    data_list = []
+    bitsize_list = []
+    for i, file in enumerate(files):
+        print(f"Loading file {i+1}/{len(files)}")
+        img = nib.load(file)
+        bitpix = ut.get_num_bits(img.header.get_data_dtype())
+        img_data = img.get_fdata()
+        data_list.append(img_data)
+        bitsize_list.append(bitpix)
+    return data_list, bitsize_list"""
+
+def load_tensors(files, ending, shape = None):
     """Loads tensor data from a list of file paths.
 
     Args:
@@ -56,16 +82,63 @@ def load_tensors(files):
         - The function uses the `nibabel` library to load the data from the files.
         - Each file is expected to contain data compatible with `nibabel`.
         - The function prints progress information during the loading process."""
-    data_list = []
-    bitsize_list = []
-    for i, file in enumerate(files):
-        print(f"Loading file {i+1}/{len(files)}")
-        img = nib.load(file)
-        bitpix = ut.get_num_bits(img.header.get_data_dtype())
-        img_data = img.get_fdata()
-        data_list.append(img_data)
-        bitsize_list.append(bitpix)
+    # if len(shape) > 3:
+    #     assert "UNSUPORTED TENSOR SHAPE IN benchmark.py"
+
+    if shape is None:
+        if '.gz' in ending:
+            data_list = []
+            bitsize_list = []
+            for i, file in enumerate(files):
+                print(f"Loading file {i+1}/{len(files)}")
+                img = nib.load(file)
+                img_data = img.get_fdata()
+                data_list.append(img_data)
+                bitsize_list.append(img_data.nbytes)
+
+        elif '.npz' in ending:
+            data_list = []
+            bitsize_list = []
+            for i, file in enumerate(files):
+                print(f"Loading file {i+1}/{len(files)}")
+                img = np.load(file)
+                img_data = img['sequence']
+                data_list.append(img_data)
+                bitsize_list.append(ut.get_num_bits(img_data.dtype))
+        
+        else:
+            assert('Error in benchmark.py: Unsuported file ')
+    
+    else:
+        B, H, W = shape
+        if files.endswith('.gz'):
+            data_list = []
+            bitsize_list = []
+            for i, file in enumerate(files):
+                print(f"Loading file {i+1}/{len(files)}")
+                img = nib.load(file)
+                img_data = img.get_fdata()
+                img_data = img_data[:B, :H, :W]
+                data_list.append(img_data)
+                bitsize_list.append(img_data.nbytes)
+
+        elif files.endswith('.npz'):
+            data_list = []
+            bitsize_list = []
+            for i, file in enumerate(files):
+                print(f"Loading file {i+1}/{len(files)}")
+                img = np.load(file)
+                img_data = img['sequence']
+                img_data = img_data[:B, :H, :W]
+                data_list.append(img_data)
+                bitsize_list.append(ut.get_num_bits(img_data.dtype))
+        else:
+            assert('Error in benchmark.py: Unsuported file ')
+
+
+
     return data_list, bitsize_list
+
 
 def conv_to_mps(data_list, mode = "DCT"):
     """Converts a list of tensors into a list of MPS (Matrix Product State) objects.
@@ -359,7 +432,7 @@ def run_benchmark(mps_list, original_tensors_list, cutoff_list):
         fidelity_list.append(get_fidelity_list(mps_list, original_mps_list))
     return np.array(ssim_list).T, np.array(compressionratio_list).T, bonddim_list, np.array(plain_disk_size).T, np.array(gzip_disk_size).T, np.array(compressionratio_list_disk).T, np.array(PSNR_list_general).T, np.array(multidimensional_SSIM).T, np.array(fidelity_list).T
 
-def run_full_benchmark(Dataset_path, cutoff_list, result_file, Datatype = "MRI", mode = "DCT" , start = 0, end=-1):
+def run_full_benchmark(Dataset_path, cutoff_list, result_file, Datatype = "MRI", mode = "DCT" , start = 0, end=-1, ending = ".gz"):
     """
     Runs a full benchmark on a dataset of tensors, evaluating compression performance 
     using matrix product states (MPS) and saving the results to a JSON file.
@@ -392,15 +465,15 @@ def run_full_benchmark(Dataset_path, cutoff_list, result_file, Datatype = "MRI",
     results_dict = {}
     results_dict["Datatype"] = Datatype
     if end == -1:
-        files = find_specific_files(Dataset_path, ".gz")[start:]
+        files = find_specific_files(Dataset_path, ending)[start:]
     else:
-        files = find_specific_files(Dataset_path, ".gz")[start:end]
+        files = find_specific_files(Dataset_path, ending)[start:end]
     results_dict["files"] = files
-    if Datatype == "MRI" or Datatype == "fMRI":
-        data_list, bitsize_list = load_tensors(files)
+    if Datatype == "MRI" or Datatype == "fMRI" or Datatype == "Video":
+        data_list, bitsize_list = load_tensors(files, ending)
     elif Datatype == "MRI_Slice":
         print("Loading MRI slices")
-        data_list, bitsize_list = load_tensors(files)
+        data_list, bitsize_list = load_tensors(files, ending)
         data_list, bitsize_list = MRI_to_MRI_slices(data_list, bitsize_list)
     results_dict["Mode"] = mode
     results_dict["bitsize_list"] = bitsize_list

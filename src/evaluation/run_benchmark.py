@@ -37,7 +37,7 @@ D_path = "Data/ds003799-2.0.0"
 #D_path = '/Users/maxge/Documents/Studium/München/02_SS 2024/QEL/Block encoding generalization/img-compression-mps/Data/fMRI_Datatset'
 
 cutoff_list = np.linspace(0, 0.1, 100)[1:]
-run_full_benchmark(D_path, cutoff_list, 'ds003799_0_5_100steps_to_0p1_Std.json', "MRI", "Std", 0, 5)
+run_full_benchmark(D_path, cutoff_list, 'ds003799_5_10_100steps_to_0p1_Std.json', "MRI", "Std", 5, 10, ".gz")
 
 # %%
 """
