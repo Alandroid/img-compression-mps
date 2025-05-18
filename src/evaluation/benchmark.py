@@ -111,7 +111,7 @@ def load_tensors(files, ending, shape = None):
     
     else:
         B, H, W = shape
-        if files.endswith('.gz'):
+        if '.gz' in ending:
             data_list = []
             bitsize_list = []
             for i, file in enumerate(files):
@@ -122,7 +122,7 @@ def load_tensors(files, ending, shape = None):
                 data_list.append(img_data)
                 bitsize_list.append(img_data.nbytes)
 
-        elif files.endswith('.npz'):
+        elif '.npz' in ending:
             data_list = []
             bitsize_list = []
             for i, file in enumerate(files):
@@ -432,7 +432,7 @@ def run_benchmark(mps_list, original_tensors_list, cutoff_list):
         fidelity_list.append(get_fidelity_list(mps_list, original_mps_list))
     return np.array(ssim_list).T, np.array(compressionratio_list).T, bonddim_list, np.array(plain_disk_size).T, np.array(gzip_disk_size).T, np.array(compressionratio_list_disk).T, np.array(PSNR_list_general).T, np.array(multidimensional_SSIM).T, np.array(fidelity_list).T
 
-def run_full_benchmark(Dataset_path, cutoff_list, result_file, Datatype = "MRI", mode = "DCT" , start = 0, end=-1, ending = ".gz"):
+def run_full_benchmark(Dataset_path, cutoff_list, result_file, Datatype = "MRI", mode = "DCT" , start = 0, end=-1, ending = ".gz", shape = "None"):
     """
     Runs a full benchmark on a dataset of tensors, evaluating compression performance 
     using matrix product states (MPS) and saving the results to a JSON file.
@@ -470,10 +470,10 @@ def run_full_benchmark(Dataset_path, cutoff_list, result_file, Datatype = "MRI",
         files = find_specific_files(Dataset_path, ending)[start:end]
     results_dict["files"] = files
     if Datatype == "MRI" or Datatype == "fMRI" or Datatype == "Video":
-        data_list, bitsize_list = load_tensors(files, ending)
+        data_list, bitsize_list = load_tensors(files, ending, shape)
     elif Datatype == "MRI_Slice":
         print("Loading MRI slices")
-        data_list, bitsize_list = load_tensors(files, ending)
+        data_list, bitsize_list = load_tensors(files, ending, shape)
         data_list, bitsize_list = MRI_to_MRI_slices(data_list, bitsize_list)
     results_dict["Mode"] = mode
     results_dict["bitsize_list"] = bitsize_list
