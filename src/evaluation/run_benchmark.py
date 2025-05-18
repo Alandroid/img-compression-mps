@@ -32,12 +32,12 @@ from src.evaluation.benchmark import run_full_benchmark
 """
 This one is for MRI images
 """
-D_path = "Data/ds003799-2.0.0"
+D_path = "Data/pedestrians"
 #D_path = '/Users/maxge/Documents/Studium/München/02_SS 2024/QEL/Block encoding generalization/img-compression-mps/Data/fMRI_Datatset'
 #D_path = '/Users/maxge/Documents/Studium/München/02_SS 2024/QEL/Block encoding generalization/img-compression-mps/Data/fMRI_Datatset'
-#run_full_benchmark_3D(D_path, cutoff_list, 'results_dict_test.json')
-cutoff_list = np.linspace(0, 0.1, 10)[1:]
-run_full_benchmark(D_path, cutoff_list, 'pedestrians_0_1_10steps_to_0.1_PSNR_test.json', "MRI", 'DCT', 0, 1, '.npz')
+
+cutoff_list = np.linspace(0, 0.1, 100)[1:]
+run_full_benchmark(D_path, cutoff_list, 'Pedestrians_0_10_100steps_to_0p1_DCT.json', "Video", "DCT", 0, 10, ".npz", shape = (200,144,216))
 
 # %%
 """
