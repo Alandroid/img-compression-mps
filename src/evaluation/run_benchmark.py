@@ -35,9 +35,9 @@ This one is for MRI images
 D_path = "Data/ds003799-2.0.0"
 #D_path = '/Users/maxge/Documents/Studium/München/02_SS 2024/QEL/Block encoding generalization/img-compression-mps/Data/fMRI_Datatset'
 #D_path = '/Users/maxge/Documents/Studium/München/02_SS 2024/QEL/Block encoding generalization/img-compression-mps/Data/fMRI_Datatset'
-
-cutoff_list = np.linspace(0, 0.1, 100)[1:]
-run_full_benchmark(D_path, cutoff_list, 'ds003799_5_10_100steps_to_0p1_Std.json', "MRI", "Std", 5, 10, ".gz")
+#run_full_benchmark_3D(D_path, cutoff_list, 'results_dict_test.json')
+cutoff_list = np.linspace(0, 0.1, 10)[1:]
+run_full_benchmark(D_path, cutoff_list, 'pedestrians_0_1_10steps_to_0.1_PSNR_test.json', "MRI", 'DCT', 0, 1, '.npz')
 
 # %%
 """

@@ -432,7 +432,7 @@ def run_benchmark(mps_list, original_tensors_list, cutoff_list):
         fidelity_list.append(get_fidelity_list(mps_list, original_mps_list))
     return np.array(ssim_list).T, np.array(compressionratio_list).T, bonddim_list, np.array(plain_disk_size).T, np.array(gzip_disk_size).T, np.array(compressionratio_list_disk).T, np.array(PSNR_list_general).T, np.array(multidimensional_SSIM).T, np.array(fidelity_list).T
 
-def run_full_benchmark(Dataset_path, cutoff_list, result_file, Datatype = "MRI", mode = "DCT" , start = 0, end=-1, ending = ".gz"):
+def run_full_benchmark(Dataset_path, cutoff_list, result_file, Datatype = "MRI", mode = "DCT" , start = 0, end=-1, ending = '.gz'):
     """
     Runs a full benchmark on a dataset of tensors, evaluating compression performance 
     using matrix product states (MPS) and saving the results to a JSON file.
