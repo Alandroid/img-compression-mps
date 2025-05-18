@@ -1,7 +1,5 @@
 Data/
-tests/MovingMNIST/
-src/compression/__pycache__/mps_ND.cpython-310.pyc
-src/compression/__pycache__/utils_ND.cpython-310.pyc
-src/evaluation/__pycache__/benchmark.cpython-310.pyc
 src/evaluation/__pycache__/
-**/__pycache__/*.pyc
+src/compression/
+src/evaluation/__pycache__/
+src/evaluation/results/
