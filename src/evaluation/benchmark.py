@@ -94,7 +94,8 @@ def load_tensors(files, ending, shape = None):
                 img = nib.load(file)
                 img_data = img.get_fdata()
                 data_list.append(img_data)
-                bitsize_list.append(img_data.nbytes)
+                bitpix = ut.get_num_bits(img.header.get_data_dtype())
+                bitsize_list.append(bitpix)
 
         elif '.npz' in ending:
             data_list = []
@@ -120,7 +121,8 @@ def load_tensors(files, ending, shape = None):
                 img_data = img.get_fdata()
                 img_data = img_data[:B, :H, :W]
                 data_list.append(img_data)
-                bitsize_list.append(img_data.nbytes)
+                bitpix = ut.get_num_bits(img.header.get_data_dtype())
+                bitsize_list.append(bitpix)
 
         elif '.npz' in ending:
             data_list = []
@@ -560,6 +562,8 @@ def combine_jsons(input_file_1, input_file_2, output_file):
     for key in data1:
         # If the value is a list in both JSONs, concatenate them.
         if key == "cutoff_list":
+            combined[key] = data1[key]
+        elif key == "mode":
             combined[key] = data1[key]
         elif isinstance(data1[key], list) and isinstance(data2[key], list):
             combined[key] = data1[key] + data2[key]

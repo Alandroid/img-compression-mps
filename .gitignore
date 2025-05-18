@@ -1,6 +1,2 @@
 Data/
-src/evaluation/__pycache__/
-src/compression/
-src/evaluation/__pycache__/
-src/evaluation/results/
-src/__pycache__/
+src/compression/__pycache__
