@@ -19,7 +19,7 @@ def time_function(func):
 
 class NDMPS:
     def __init__(self, mps: qtn.MatrixProductState = None, qubit_size: tuple = None, encoding_map: np.ndarray = None, 
-                 boundary_list: list = None,norm: bool = True, mode: str = "Std", dim: int = None):
+                 boundary_list: list = None,norm: bool = True, norm_value = None,mode: str = "Std", dim: int = None):
         """
         Initializes the NDMPS class.
         
@@ -37,6 +37,7 @@ class NDMPS:
         self.mps = mps
         self.dim = dim
         self.norm = norm
+        self.norm_value = norm_value
         self.mode = mode
         self.boundary_list = np.array(boundary_list) # contains the maximum and minimum value of each mps tensor
     
@@ -81,9 +82,9 @@ class NDMPS:
         for arr in mps.arrays:
             boundary_list.append([np.min(arr), np.max(arr)])
         
-        mps.arrays
+        norm_value = np.sqrt(mps @ mps)
 
-        return cls(mps, qubit_size, encoding_map, boundary_list, norm, mode, len(np.shape(tensor)))
+        return cls(mps, qubit_size, encoding_map, boundary_list, norm, norm_value, mode, len(np.shape(tensor)))
 
 
     def update_boundary_list(self):
@@ -114,7 +115,14 @@ class NDMPS:
             # Compress bond according to percentage * bond dimension
             qtn.tensor_compress_bond(t1, t2, cutoff = cutoff, cutoff_mode = "rel") 
         self.update_boundary_list()
+        self.update_norm()
     
+    def update_norm(self):
+        """
+        Updates the norm value of the MPS.
+        """
+        self.norm_value = np.sqrt(self.mps @ self.mps)
+
     def continuous_compress(self, cutoff: float, print_ratio: bool = True):
         """
         Performs continuous compression at different cutoff levels.
@@ -189,6 +197,7 @@ class NDMPS:
             assert self.mps.arrays[i].shape == tensorlist[i].shape #check whether they have the same shape
             self.mps.arrays[i][:] = tensorlist[i] #replace quimb tensors with the new tensors
         self.update_boundary_list()
+        self.update_norm() #update the norm value of the MPS
 
     def return_tensors_data(self):
         """

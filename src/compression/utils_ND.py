@@ -87,6 +87,13 @@ def get_factorlist(shape):
 def hierarchical_block_indexing(index, prod_block_sizes):
     return np.floor(np.mod(index.reshape([1]+list(index.shape)), prod_block_sizes[:-1].reshape(list(prod_block_sizes[:-1].shape)+[1]*(prod_block_sizes.shape[1])))/prod_block_sizes[1:].reshape(list(prod_block_sizes[1:].shape)+[1]*(prod_block_sizes.shape[1]))).astype(int)
 
+def calc_overlap(mps1, mps2):
+    """
+    Cacluclate the overlap between the two mps.
+    """
+    overlap = mps1.mps @ mps2.mps /(mps1.norm_value * mps2.norm_value)
+    return overlap
+
 def gen_encoding_map(shape):
     dim = len(shape)
     block_sizes, prod_blocks = get_factorlist(shape)

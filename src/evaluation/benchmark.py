@@ -9,6 +9,7 @@ import os
 import src.compression.utils_ND as ut
 import pickle
 import json
+from copy import deepcopy
 
 """
 This file contains the functions which are used to run the benchmark and track the metrics.
@@ -60,9 +61,10 @@ def load_tensors(files):
     for i, file in enumerate(files):
         print(f"Loading file {i+1}/{len(files)}")
         img = nib.load(file)
+        bitpix = ut.get_num_bits(img.header.get_data_dtype())
         img_data = img.get_fdata()
         data_list.append(img_data)
-        bitsize_list.append(img_data.nbytes)
+        bitsize_list.append(bitpix)
     return data_list, bitsize_list
 
 def conv_to_mps(data_list, mode = "DCT"):
@@ -291,6 +293,24 @@ def get_shapes(data_list):
         shapes.append(data.shape)
     return shapes
 
+def get_fidelity_list(mps_list, original_mps_list):
+    """
+    Computes the fidelity between a list of MPS objects and their corresponding original tensors.
+
+    Parameters:
+        mps_list (list): A list of MPS objects. Each object must have a 'dim' attribute indicating its dimensions of the original tensor 
+                         (2, 3, or 4) and a 'to_tensor()' method to convert the MPS to tensor form.
+        original_tensor_list (list): A list of original tensors corresponding to each MPS object. These are used as the
+                                     reference to compute the fidelity values.
+
+    Returns:
+        list: A list of fidelity values computed for each MPS object.
+    """
+    fidelity_list = []
+    for i in np.arange(len(mps_list)):
+        fidelity_list.append(ut.calc_overlap(mps_list[i], original_mps_list[i]))
+    return fidelity_list
+
 def run_benchmark(mps_list, original_tensors_list, cutoff_list):
     """
     Runs a series of benchmarks on a list of MPS tensors by iteratively compressing all mps objects int the list with given cutoff values.
@@ -314,7 +334,7 @@ def run_benchmark(mps_list, original_tensors_list, cutoff_list):
             - gzip_disk_sizes (numpy.ndarray): Transposed array of gzip-compressed storage sizes on disk for each compression level.
             - disk_compression_ratios (numpy.ndarray): Transposed array of disk compression ratios when using gzip for each compression level.
     """
-
+    original_mps_list = deepcopy(mps_list)
     ssim_list = [benchmark_SSIM(mps_list, original_tensors_list)]
     multidimensional_SSIM = [get_multidimensional_SSIM(mps_list, original_tensors_list)]
     compressionratio_list = [calc_compression_ratio(mps_list)]
@@ -323,6 +343,7 @@ def run_benchmark(mps_list, original_tensors_list, cutoff_list):
     gzip_disk_size = [get_gzip_bytesize_on_disk(mps_list)]
     compressionratio_list_disk = [get_compression_ratio_on_disk_with_gzip(mps_list)]
     PSNR_list_general = [get_general_PSNR(mps_list, original_tensors_list)]
+    fidelity_list = [get_fidelity_list(mps_list, original_mps_list)]
     for i, cutoff in enumerate(cutoff_list):
         percent = (i + 1) / len(cutoff_list) * 100
         print(f"Status: {percent:.2f}% - Current cutoff: {cutoff}")
@@ -335,39 +356,39 @@ def run_benchmark(mps_list, original_tensors_list, cutoff_list):
         ssim_list.append(benchmark_SSIM(mps_list, original_tensors_list))
         PSNR_list_general.append(get_general_PSNR(mps_list, original_tensors_list))
         multidimensional_SSIM.append(get_multidimensional_SSIM(mps_list, original_tensors_list))
-    return np.array(ssim_list).T, np.array(compressionratio_list).T, bonddim_list, np.array(plain_disk_size).T, np.array(gzip_disk_size).T, np.array(compressionratio_list_disk).T, np.array(PSNR_list_general).T, np.array(multidimensional_SSIM).T
+        fidelity_list.append(get_fidelity_list(mps_list, original_mps_list))
+    return np.array(ssim_list).T, np.array(compressionratio_list).T, bonddim_list, np.array(plain_disk_size).T, np.array(gzip_disk_size).T, np.array(compressionratio_list_disk).T, np.array(PSNR_list_general).T, np.array(multidimensional_SSIM).T, np.array(fidelity_list).T
 
-def run_full_benchmark(Dataset_path, cutoff_list, result_file, Datatype = "MRI", start = 0, end=-1):
-    def run_full_benchmark(Dataset_path, cutoff_list, result_file, Datatype="MRI", start=0, end=-1):
-        """
-        Runs a full benchmark on a dataset of tensors, evaluating compression performance 
-        using matrix product states (MPS) and saving the results to a JSON file.
+def run_full_benchmark(Dataset_path, cutoff_list, result_file, Datatype = "MRI", mode = "DCT" , start = 0, end=-1):
+    """
+    Runs a full benchmark on a dataset of tensors, evaluating compression performance 
+    using matrix product states (MPS) and saving the results to a JSON file.
 
-        Args:
-            Dataset_path (str): Path to the dataset directory containing the files to process.
-            cutoff_list (list): List of cutoff values to use for MPS compression.
-            result_file (str): Name of the JSON file where the benchmark results will be saved.
-            Datatype (str, optional): Type of data in the dataset. Options are "MRI", "fMRI", or "MRI_Slice". 
-                                      Defaults to "MRI".
-            start (int, optional): Starting index for selecting files from the dataset. Defaults to 0.
-            end (int, optional): Ending index for selecting files from the dataset. Use -1 to include all files 
-                                 from the starting index. Defaults to -1.
+    Args:
+        Dataset_path (str): Path to the dataset directory containing the files to process.
+        cutoff_list (list): List of cutoff values to use for MPS compression.
+        result_file (str): Name of the JSON file where the benchmark results will be saved.
+        Datatype (str, optional): Type of data in the dataset. Options are "MRI", "fMRI", or "MRI_Slice". 
+                                    Defaults to "MRI".
+        start (int, optional): Starting index for selecting files from the dataset. Defaults to 0.
+        end (int, optional): Ending index for selecting files from the dataset. Use -1 to include all files 
+                                from the starting index. Defaults to -1.
 
-        Returns:
-            None: The function saves the benchmark results to a JSON file and does not return any value.
+    Returns:
+        None: The function saves the benchmark results to a JSON file and does not return any value.
 
-        Notes:
-            - The function processes files with the ".gz" extension.
-            - For "MRI_Slice" datatype, the MRI data is converted to slices before processing.
-            - The benchmark evaluates metrics such as SSIM, compression ratio, bond dimensions, 
-              and disk sizes (plain and gzip-compressed).
-            - Results are stored in a dictionary and serialized to a JSON file in the 
-              "src/evaluation/results/" directory.
+    Notes:
+        - The function processes files with the ".gz" extension.
+        - For "MRI_Slice" datatype, the MRI data is converted to slices before processing.
+        - The benchmark evaluates metrics such as SSIM, compression ratio, bond dimensions, 
+            and disk sizes (plain and gzip-compressed).
+        - Results are stored in a dictionary and serialized to a JSON file in the 
+            "src/evaluation/results/" directory.
 
-        Raises:
-            FileNotFoundError: If the specified dataset path or result file path is invalid.
-            ValueError: If invalid datatype is provided or if other input arguments are incorrect.
-        """
+    Raises:
+        FileNotFoundError: If the specified dataset path or result file path is invalid.
+        ValueError: If invalid datatype is provided or if other input arguments are incorrect.
+    """
     results_dict = {}
     results_dict["Datatype"] = Datatype
     if end == -1:
@@ -378,17 +399,20 @@ def run_full_benchmark(Dataset_path, cutoff_list, result_file, Datatype = "MRI",
     if Datatype == "MRI" or Datatype == "fMRI":
         data_list, bitsize_list = load_tensors(files)
     elif Datatype == "MRI_Slice":
+        print("Loading MRI slices")
         data_list, bitsize_list = load_tensors(files)
-        data_list = MRI_to_MRI_slices(data_list)
+        data_list, bitsize_list = MRI_to_MRI_slices(data_list, bitsize_list)
+    results_dict["Mode"] = mode
     results_dict["bitsize_list"] = bitsize_list
     results_dict["shapes"] = get_shapes(data_list)
-    mps_list = conv_to_mps(data_list)
+    mps_list = conv_to_mps(data_list, mode)
     results_dict["cutoff_list"] = cutoff_list.tolist()
     print("Starting benchmark")
-    ssim_list, compressionratio_list, bonddim_list, plain_disk_size, gzip_disk_size, compressionratio_list_disk, PSNR_general_list, multidimensional_SSIM = run_benchmark(mps_list, data_list, cutoff_list)
+    ssim_list, compressionratio_list, bonddim_list, plain_disk_size, gzip_disk_size, compressionratio_list_disk, PSNR_general_list, multidimensional_SSIM, fidelity_list = run_benchmark(mps_list, data_list, cutoff_list)
     results_dict["ssim_list"] = ssim_list.tolist()
     results_dict["multidimensional_SSIM"] = multidimensional_SSIM.tolist()
     results_dict["PSNR_list"] = PSNR_general_list.tolist()
+    results_dict["fidelity_list"] = fidelity_list.tolist()
     results_dict["compressionratio_list"] = compressionratio_list.tolist()
     results_dict["bonddim_list"] = bonddim_list
     results_dict["plain_disk_size"] = plain_disk_size.tolist()
@@ -399,7 +423,7 @@ def run_full_benchmark(Dataset_path, cutoff_list, result_file, Datatype = "MRI",
         json.dump(results_dict, fp)
 
 
-def MRI_to_MRI_slices(data_list):
+def MRI_to_MRI_slices(data_list, bitsize_list=None):
     """
     Extracts central slices from 3D MRI volumes.
 
@@ -416,11 +440,16 @@ def MRI_to_MRI_slices(data_list):
         corresponding to its central slices along each dimension.
     """
     img_data_list = []
+    bitsize_list_new = []
     for i, data in enumerate(data_list):
         img_data_list.append(data[data.shape[0]//2, :, :])
+        bitsize_list_new.append(bitsize_list[i])
         img_data_list.append(data[:, data.shape[1]//2, :])
+        bitsize_list_new.append(bitsize_list[i])
         img_data_list.append(data[:, :, data.shape[2]//2])
-    return img_data_list
+        bitsize_list_new.append(bitsize_list[i])
+
+    return img_data_list, bitsize_list_new
 
 
 def combine_jsons(input_file_1, input_file_2, output_file):
