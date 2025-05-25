@@ -56,6 +56,7 @@ class NDMPS:
         Returns:
             NDMPS: Instance of NDMPS class.
         """
+        tensor = tensor.astype(np.float64)  # Ensure tensor is in float64 format
         qubit_size, encoding_map = gen_encoding_map(tensor.shape)
         encoding_map = np.moveaxis(encoding_map, 0, -1)
 

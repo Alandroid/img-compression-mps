@@ -79,7 +79,7 @@ def get_factorlist(shape):
     factor_lists = np.array(factor_lists).T
     prod_block_sizes = np.ones((len(factor_lists)+1, len(factor_lists[0])), dtype = int)
     prod_block_sizes[1:-1] = np.cumprod(factor_lists[-1:0:-1], axis =0)[::-1]
-    prod_block_sizes[0] = 1e10
+    prod_block_sizes[0] = prod_block_sizes [0] * 1e100
 
     return factor_lists, prod_block_sizes
 
