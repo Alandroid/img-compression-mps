@@ -132,7 +132,7 @@ class NDMPS:
             cutoff (float): Base cutoff value.
             print_ratio (bool, optional): Whether to print compression ratio. Defaults to True.
         """
-        compress_list = np.array([0.01, 0.05, 0.1, 0.2, 0.5, 0.8, 1]) * cutoff
+        compress_list = np.linspace(0,1,20) * cutoff
         for c in compress_list:
             self.compress(c)
             if print_ratio:

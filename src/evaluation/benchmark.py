@@ -549,10 +549,10 @@ def combine_jsons(input_file_1, input_file_2, output_file):
         Writes the combined JSON content to a file in the "src/evaluation/results/" directory.
         Prints a success message upon completion.
     """
-    with open("src/evaluation/results/" + input_file_1, "r") as file1:
+    with open(input_file_1, "r") as file1:
         data1 = json.load(file1)
 
-    with open("src/evaluation/results/" + input_file_2, "r") as file2:
+    with open(input_file_2, "r") as file2:
         data2 = json.load(file2)
 
     # Create a new dictionary for the combined data
@@ -572,7 +572,7 @@ def combine_jsons(input_file_1, input_file_2, output_file):
             combined[key] = data1[key]
 
     # Write the combined dictionary to a new JSON file
-    with open("src/evaluation/results/"+output_file, "w") as outfile:
+    with open(output_file, "w") as outfile:
         json.dump(combined, outfile, indent=4)
 
     print("Combined JSON created successfully!")
