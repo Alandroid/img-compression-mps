@@ -2,3 +2,5 @@ Data/
 src/compression/__pycache__
 figures/
 results/
+Legacy/
+dev_test_folder/

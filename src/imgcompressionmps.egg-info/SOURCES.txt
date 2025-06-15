@@ -1,0 +1,6 @@
+pyproject.toml
+src/imgcompressionmps/__init__.py
+src/imgcompressionmps.egg-info/PKG-INFO
+src/imgcompressionmps.egg-info/SOURCES.txt
+src/imgcompressionmps.egg-info/dependency_links.txt
+src/imgcompressionmps.egg-info/top_level.txt
