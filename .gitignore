@@ -1,6 +1,17 @@
+# general folders to be ignored
 Data/
 src/compression/__pycache__
 figures/
 results/
+
+# macOS
+.DS_Store
+
+# Python packaging
+*.egg-info/
+build/
+dist/
+
+# Dev folders
 Legacy/
 dev_test_folder/
