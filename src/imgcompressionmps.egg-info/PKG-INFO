@@ -1,7 +1,0 @@
-Metadata-Version: 2.4
-Name: imgcompressionmps
-Version: 0.1.0
-Summary: Tensor-network based image compression for arbitrary shapes and dimensions
-Author-email: Alan Piovesana <alan.albert.p@gmail.com>
-Requires-Python: >=3.8
-Description-Content-Type: text/markdown
