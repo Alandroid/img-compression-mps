@@ -5,10 +5,10 @@ figures/
 results/
 
 # macOS
-.DS_Store
+**/.DS_Store
 
 # Python packaging
-*.egg-info/
+**/*.egg-info/
 build/
 dist/
 
