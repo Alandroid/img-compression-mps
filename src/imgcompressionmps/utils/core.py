@@ -105,7 +105,7 @@ def get_factorlist(shape: Sequence[int]) -> Tuple[np.ndarray, np.ndarray]:
     # Cumulative products for hierarchical indexing
     prod = np.ones((len(factor_arr) + 1, factor_arr.shape[1]), dtype=int)
     prod[1:-1] = np.cumprod(factor_arr[-1:0:-1], axis=0)[::-1]
-    prod[0] *= 1e100  # sentinel for the top level
+    prod[0] *= 1_000_000  # sentinel for the top level
 
     return factor_arr, prod
 
