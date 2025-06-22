@@ -251,7 +251,7 @@ class NDMPS:
         float
             Disk compression ratio.
         """
-        original_size = np.prod(self.qubit_size) * get_num_bits(dtype) / 8
+        original_size = np.prod(self.qubit_size) * get_num_bits(dtype) / 8.
         compressed_size = self.get_bytesize_on_disk(dtype, replace)
         return compressed_size / original_size
 
