@@ -113,6 +113,8 @@ def compress_list(mps_list, compression_factors):
 
     Returns:
         None: The function modifies the MPS objects in place and does not return a value."""
+    if compression_factors is None:
+        raise ValueError("compression_factors must not be None")
     for mps in mps_list:
         mps.compress(compression_factors)
 
@@ -134,6 +136,9 @@ def benchmark_metric(mps_list, reference_list=None, metric="compression_ratio", 
 
     if metric not in metric_fn:
         raise ValueError(f"Unsupported metric: {metric}")
+
+    if reference_list and len(reference_list) != len(mps_list):
+        raise IndexError("Length mismatch: reference_list and mps_list must have the same length.")
 
     for i, mps in enumerate(mps_list):
         ref = reference_list[i] if reference_list else None
@@ -175,9 +180,10 @@ def run_benchmark(mps_list, original_tensors_list, cutoff_list):
 
     # Post-process results: transpose where applicable
     for key in results:
-        if isinstance(results[key][0], (list, np.ndarray)) and np.ndim(results[key][0]) > 0:
+        if not results[key] or not results[key][0]:
+            results[key] = []
+        elif isinstance(results[key][0], (list, np.ndarray)) and np.ndim(results[key][0]) > 0:
             results[key] = np.array(results[key]).T
-        # bond_dims stays as list-of-lists
 
     return results
 
@@ -190,12 +196,16 @@ def run_full_benchmark(dataset_path, cutoff_list, result_file,
     Results are saved as a JSON file.
     """
     dataset_path = Path(dataset_path)
-    result_path = Path("src/evaluation/results") / result_file
-    result_path.parent.mkdir(parents=True, exist_ok=True)
+    result_path = Path(result_file)
+    if not result_path.is_absolute() and not str(result_path).startswith("src/evaluation/results"):
+        result_path = Path("src/evaluation/results") / result_path
 
     # Select files
     files = find_specific_files(dataset_path, ending)
     files = files[start:] if end == -1 else files[start:end]
+
+    if not files:
+        raise FileNotFoundError(f"No files with extension {ending} found in {dataset_path}")
 
     # Load tensors
     data_list, bitsize_list = load_tensors(files, ending, shape)
@@ -221,5 +231,6 @@ def run_full_benchmark(dataset_path, cutoff_list, result_file,
         **{k: v.tolist() if hasattr(v, "tolist") else v for k, v in metrics.items()}
     }
 
+    result_path.parent.mkdir(parents=True, exist_ok=True)
     with open(result_path, 'w') as f:
         json.dump(result_dict, f, indent=2)

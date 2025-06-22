@@ -5,16 +5,25 @@ from sympy.ntheory import factorint
 
 def gen_encoding_map(shape: Sequence[int]) -> Tuple[np.ndarray, np.ndarray]:
     """
-    Build the encoding map and qubit sizes for a tensor of *shape*.
+    Build the encoding map and qubit sizes for a tensor of given shape.
+
+    Parameters
+    ----------
+    shape : Sequence[int]
+        Shape of the input tensor.
 
     Returns
     -------
     qubit_sizes : np.ndarray
         Physical qubit dimension per virtual site (product of factors).
     encoding_map : np.ndarray
-        Map from physical coordinates → qubit indices
-        with shape ``(num_levels, *shape)``.
+        Map from physical coordinates to qubit indices with shape (num_levels, *shape).
     """
+    if len(shape) == 0:
+        raise ValueError("Shape cannot be empty.")
+    if any(not isinstance(dim, int) or dim <= 0 for dim in shape):
+        raise ValueError("All dimensions must be positive integers.")
+
     block_sizes, prod_blocks = get_factorlist(shape)
     idx_grid = np.indices(shape)
     mapped = hierarchical_block_indexing(idx_grid, prod_blocks)
@@ -28,55 +37,67 @@ def gen_encoding_map(shape: Sequence[int]) -> Tuple[np.ndarray, np.ndarray]:
 
 def balance_factors(factors: List[int], target_num: int) -> List[int]:
     """
-    Reduce *factors* to *target_num* elements by repeatedly multiplying the two
-    smallest factors.
+    Balance a list of factors to match a target number of entries.
 
     Parameters
     ----------
-    factors
-        List of prime factors for one dimension.
-    target_num
+    factors : List[int]
+        Prime factor list for one tensor dimension.
+    target_num : int
         Desired final length of the factor list.
 
     Returns
     -------
-    list[int]
-        Balanced list with length == *target_num*.
+    List[int]
+        Balanced factor list of length target_num.
+
+    Raises
+    ------
+    ValueError
+        If target_num is negative or zero when factors are non-empty.
     """
-    factors = sorted(factors)  # ensure ascending
-    while len(factors) > target_num:
-        smallest = factors.pop(0)
-        next_smallest = factors.pop(0)
-        grouped = smallest * next_smallest
+    if target_num < 0:
+        raise ValueError("target_num must be non-negative.")
+    if target_num == 0 and len(factors) > 0:
+        raise ValueError("Cannot reduce non-empty factor list to length zero.")
 
-        # re-insert while keeping ascending order
-        insert_at = 0
-        while insert_at < len(factors) and factors[insert_at] < grouped:
-            insert_at += 1
-        factors.insert(insert_at, grouped)
+    factors = sorted(factors)
 
-    return factors
+    if len(factors) > target_num:
+        while len(factors) > target_num:
+            smallest = factors.pop(0)
+            next_smallest = factors.pop(0)
+            factors.insert(0, smallest * next_smallest)
+            factors.sort()
+    elif len(factors) < target_num:
+        factors += [1] * (target_num - len(factors))
+
+    return sorted(factors)
 
 
 def get_factorlist(shape: Sequence[int]) -> Tuple[np.ndarray, np.ndarray]:
     """
-    Generate balanced prime factors for each tensor dimension and their cumulative
-    products (used for hierarchical indexing).
+    Generate balanced prime factor lists and cumulative products per tensor dimension.
 
     Parameters
     ----------
-    shape
+    shape : Sequence[int]
         Tensor shape.
 
     Returns
     -------
     factor_lists : np.ndarray
-        Shape = (num_levels, ndim).  Each column holds factors for that dimension.
+        Array of shape (num_levels, ndim), where each column is the factor list of a dimension.
     prod_block_sizes : np.ndarray
-        Cumulative products used by :func:`hierarchical_block_indexing`.
+        Cumulative product arrays used for hierarchical indexing.
     """
-    # Step 1 – prime-factor decomposition for each dimension
+    if len(shape) == 0:
+        raise ValueError("Shape cannot be empty.")
+    if any(not isinstance(dim, int) or dim <= 0 for dim in shape):
+        raise ValueError("All dimensions must be positive integers.")
+
     factor_lists: List[List[int]] = []
+
     for dim in shape:
         if dim == 1:
             factors = [1]
@@ -86,51 +107,53 @@ def get_factorlist(shape: Sequence[int]) -> Tuple[np.ndarray, np.ndarray]:
                 factors.extend([prime] * exp)
         factor_lists.append(sorted(factors))
 
-    # Step 2 – balance number of factors across dimensions
     min_len = min(len(f) for f in factor_lists)
     for i, factors in enumerate(factor_lists):
-        if len(factors) > min_len:
-            factor_lists[i] = balance_factors(factors, min_len)
-        elif len(factors) < min_len:
-            factors.extend([1] * (min_len - len(factors)))
-            factor_lists[i] = sorted(factors)
+        factor_lists[i] = balance_factors(factors, min_len)
 
-    # Optional reversal every second dimension (snake pattern)
     for i, factors in enumerate(factor_lists):
         if i % 2 == 1:
             factor_lists[i] = factors[::-1]
 
-    factor_arr = np.array(factor_lists).T  # shape → (levels, ndim)
+    factor_arr = np.array(factor_lists).T  # Shape: (num_levels, ndim)
 
-    # Cumulative products for hierarchical indexing
     prod = np.ones((len(factor_arr) + 1, factor_arr.shape[1]), dtype=int)
-    prod[1:-1] = np.cumprod(factor_arr[-1:0:-1], axis=0)[::-1]
-    prod[0] *= 1e100  # sentinel for the top level
+    if len(factor_arr) > 1:
+        prod[1:-1] = np.cumprod(factor_arr[-1:0:-1], axis=0)[::-1]
+    prod[0] = np.iinfo(np.int64).max
 
     return factor_arr, prod
 
 
 def hierarchical_block_indexing(
-    index: np.ndarray, prod_block_sizes: np.ndarray
+    index: np.ndarray,
+    prod_block_sizes: np.ndarray
 ) -> np.ndarray:
     """
-    Map absolute indices → hierarchical block indices.
+    Map absolute indices to hierarchical block indices via integer division.
 
     Parameters
     ----------
-    index
-        `np.indices(shape)` style array.
-    prod_block_sizes
-        Output of :func:`get_factorlist`.
+    index : np.ndarray
+        Index grid (from np.indices), shape (ndim, *shape).
+    prod_block_sizes : np.ndarray
+        Cumulative products from get_factorlist, shape (num_levels + 1, ndim).
 
     Returns
     -------
     np.ndarray
-        Hierarchical indices with shape
-        ``(num_levels, …original index shape…)``.
+        Hierarchical indices with shape (num_levels, ndim, *original_shape).
+
+    Raises
+    ------
+    ValueError
+        If index and prod_block_sizes have mismatched dimensions.
     """
-    # Reshape helpers for broadcast-compatible division / modulo
-    n_levels, ndim = prod_block_sizes.shape
+    ndim = index.shape[0]
+    if prod_block_sizes.ndim != 2 or prod_block_sizes.shape[1] != ndim or prod_block_sizes.shape[0] < 2:
+        raise ValueError("prod_block_sizes must be of shape (num_levels + 1, ndim) with ndim matching index.")
+
+    n_levels = prod_block_sizes.shape[0] - 1
     reshape_tail = [1] * ndim
 
     numer = np.mod(
@@ -140,4 +163,5 @@ def hierarchical_block_indexing(
     denom = prod_block_sizes[1:].reshape(
         list(prod_block_sizes[1:].shape) + reshape_tail
     )
+
     return np.floor(numer / denom).astype(int)
