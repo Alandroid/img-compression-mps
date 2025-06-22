@@ -46,7 +46,7 @@ tests/
 pip install -r requirements.txt
 
 # Run a benchmark (example)
-python src/imgcompressionmps/evaluation/run_benchmark.py
+python src/imgcompressionmps/evaluation/main.py
 ```
 
 ---
