@@ -22,3 +22,10 @@ dist/
 # Dev folders
 Legacy/
 dev_test_folder/
+
+
+#Cache fiules
+__pycache__/
+**/__pycache__/
+
+*.py[cod]

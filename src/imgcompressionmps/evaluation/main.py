@@ -8,7 +8,23 @@ from imgcompressionmps.evaluation.benchmark import run_full_benchmark
 
 # --- Benchmark Configs ---
 benchmark_configs = [
+    
     {
+        "name": "MRI",
+        "dataset_path": "Data/MRI Dataset",
+        "cutoff": np.linspace(0, 0.1, 10)[1:],
+        "filename": "ds000003_0_1_10steps_to_0p1_Std.json",
+        "datatype": "MRI",
+        "mode": "Std",
+        "start": 0,
+        "end": 1,
+        "ending": ".gz",
+        "shape": None
+    }
+]
+
+"""
+{
         "name": "Video - Pedestrians",
         "dataset_path": "Data/pedestrians",
         "cutoff": np.linspace(0, 0.1, 100)[1:],
@@ -20,19 +36,7 @@ benchmark_configs = [
         "ending": ".npz",
         "shape": (200, 144, 216)
     },
-    {
-        "name": "MRI",
-        "dataset_path": "Data/MRI Dataset",
-        "cutoff": np.linspace(0, 0.1, 100)[1:],
-        "filename": "ds000003_0_13_100steps_to_0p1_Std.json",
-        "datatype": "MRI",
-        "mode": "Std",
-        "start": 0,
-        "end": -1,
-        "ending": ".gz",
-        "shape": None
-    },
-    {
+{
         "name": "fMRI",
         "dataset_path": "Data/fMRI_Datatset",
         "cutoff": np.linspace(0, 0.1, 100)[1:],
@@ -44,6 +48,8 @@ benchmark_configs = [
         "ending": ".gz",
         "shape": None
     },
+,
+    
     {
         "name": "MRI Slice",
         "dataset_path": "Data/ds003799-2.0.0",
@@ -56,7 +62,13 @@ benchmark_configs = [
         "ending": ".gz",
         "shape": None
     }
-]
+
+
+
+"""
+
+
+
 
 # --- Run All Benchmarks ---
 if __name__ == "__main__":
