@@ -12,3 +12,8 @@ tests/__pycache__/
 tests/core/
 tests/evaluation/
 tests/utils/
+
+
+src/__pycache__/__init__.cpython-310.pyc
+src/evaluation/__pycache__/__init__.cpython-310.pyc
+src/evaluation/__pycache__/benchmark.cpython-310.pyc

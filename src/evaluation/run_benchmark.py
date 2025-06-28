@@ -36,8 +36,8 @@ D_path = "Data/pedestrians"
 #D_path = '/Users/maxge/Documents/Studium/München/02_SS 2024/QEL/Block encoding generalization/img-compression-mps/Data/fMRI_Datatset'
 #D_path = '/Users/maxge/Documents/Studium/München/02_SS 2024/QEL/Block encoding generalization/img-compression-mps/Data/fMRI_Datatset'
 
-cutoff_list = np.linspace(0, 0.1, 100)[1:]
-run_full_benchmark(D_path, cutoff_list, 'Pedestrians_0_10_100steps_to_0p1_Std.json', "Video", "Std", 0, 10, ".npz", shape = (200,144,216))
+cutoff_list = np.linspace(0, 0.1, 10)[1:]
+run_full_benchmark(D_path, cutoff_list, 'Pedestrians_0_1_10steps_to_0p1_Std_old_version.json', "Video", "Std", 0, 1, ".npz", shape = (200,144,216))
 
 # %%
 """
@@ -52,14 +52,27 @@ run_full_benchmark(D_path, cutoff_list, 'ds000003_0_13_100steps_to_0p1_Std.json'
 #%%
 
 """
+This one is for MRI images
+"""
+D_path = "Data/ds003799-2.0.0"
+#D_path = '/Users/maxge/Documents/Studium/München/02_SS 2024/QEL/Block encoding generalization/img-compression-mps/Data/fMRI_Datatset'
+#D_path = '/Users/maxge/Documents/Studium/München/02_SS 2024/QEL/Block encoding generalization/img-compression-mps/Data/fMRI_Datatset'
+
+cutoff_list = np.linspace(0, 0.1, 10)[1:]
+run_full_benchmark(D_path, cutoff_list, 'ds003799_0_1_10steps_to_0p1_Std_new_version.json', "MRI", "Std", 0, 1, ".gz", shape = None)
+#%%
+
+
+
+"""
 This one is for fMRI images
 """
 D_path = "Data/fMRI_Datatset"
 #D_path = '/Users/maxge/Documents/Studium/München/02_SS 2024/QEL/Block encoding generalization/img-compression-mps/Data/fMRI_Datatset'
 #D_path = '/Users/maxge/Documents/Studium/München/02_SS 2024/QEL/Block encoding generalization/img-compression-mps/Data/fMRI_Datatset'
 
-cutoff_list = np.linspace(0, 0.1, 100)[1:]
-run_full_benchmark(D_path, cutoff_list, 'fMRI_0_5_100steps_to_0p1_Std.json', "fMRI", "Std", 0, 5, ".gz", shape = None)
+cutoff_list = np.linspace(0, 0.1, 10)[1:]
+run_full_benchmark(D_path, cutoff_list, 'fMRI_0_1_10steps_to_0p1_Std_old_version.json', "fMRI", "Std", 0, 1, ".gz", shape = None)
 #%%
 """
 This one is for MRI slices
