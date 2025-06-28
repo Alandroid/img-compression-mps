@@ -2,3 +2,5 @@ Data/
 src/compression/__pycache__
 figures/
 results/
+**/.DS_Store
+.DS_Store
