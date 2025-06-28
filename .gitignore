@@ -4,3 +4,11 @@ figures/
 results/
 **/.DS_Store
 .DS_Store
+
+
+src/imgcompressionmps.egg-info/
+src/imgcompressionmps/
+tests/__pycache__/
+tests/core/
+tests/evaluation/
+tests/utils/
