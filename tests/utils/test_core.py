@@ -41,11 +41,6 @@ def test_balance_factors_large_input():
     assert len(result) == 2
     assert np.prod(result) == 1024
 
-def test_balance_factors_target_larger_than_input():
-    """Extend list correctly when target length > input."""
-    result = balance_factors([2, 3], 5)
-    assert np.prod(result) == 6
-    assert len(result) == 5
 
 def test_balance_factors_empty_input():
     """Empty input with zero target returns empty list."""
@@ -70,11 +65,27 @@ def test_balance_factors_identity_case():
 # ---------------------- get_factorlist Tests ----------------------
 
 def test_get_factorlist_shapes_match():
-    shape = (6, 9)
+    shape = (30, 24)
     factors, prods = get_factorlist(shape)
     assert factors.shape[1] == len(shape)
     assert prods.shape[1] == len(shape)
     assert prods.shape[0] == factors.shape[0] + 1
+    assert np.all(np.prod(factors, axis=0) == (30,24)) == True # checks if all factors multiplied give again the same shape
+
+def test_synthetic_data_get_factorlist():
+    shape = (256,128)
+    factors, prods = get_factorlist(shape)
+    true_factors = np.array([[2, 2],[2, 2],[2, 2],[2, 2],[2, 2],[2, 2],[4, 2]])
+    true_prods = np.array([[9223372036854775807, 9223372036854775807],
+       [                128,                  64],
+       [                 64,                  32],
+       [                 32,                  16],
+       [                 16,                   8],
+       [                  8,                   4],
+       [                  4,                   2],
+       [                  1,                   1]])
+    assert np.array_equal(factors, true_factors)
+    assert np.array_equal(prods, true_prods)
 
 def test_get_factorlist_with_ones():
     factors, prods = get_factorlist((1, 1))
@@ -98,10 +109,18 @@ def test_get_factorlist_with_zero_dim():
         get_factorlist((0, 4))
 
 def test_get_factorlist_high_dimensional():
-    shape = (2, 3, 4)
+    shape = (30, 40, 50)
     factors, prods = get_factorlist(shape)
-    assert factors.shape[1] == 3
-    assert prods.shape[1] == 3
+    true_factors = np.array([[2, 5, 2],
+        [3, 4, 5],
+        [5, 2, 5]])
+    true_prods = np.array([[9223372036854775807, 9223372036854775807, 9223372036854775807],
+        [                 15,                   8,                  25],
+        [                  5,                   2,                   5],
+        [                  1,                   1,                   1]])
+    assert np.array_equal(factors, true_factors)
+    assert np.array_equal(prods, true_prods)
+    
 
 # ---------------------- gen_encoding_map Tests ----------------------
 
@@ -128,6 +147,30 @@ def test_gen_encoding_map_empty_shape():
 def test_gen_encoding_map_invalid_shape_type():
     with pytest.raises(ValueError):
         gen_encoding_map(("a", "b"))
+
+def test_synthetic_gen_encoding_map():
+    shape = (8, 9)
+    qubit_sizes, encoding_map = gen_encoding_map(shape)
+    true_qubit_sizes = np.array([6, 12])
+    true_encoding_map = np.array([[[ 0,  0,  0,  1,  1,  1,  2,  2,  2],
+         [ 0,  0,  0,  1,  1,  1,  2,  2,  2],
+         [ 0,  0,  0,  1,  1,  1,  2,  2,  2],
+         [ 0,  0,  0,  1,  1,  1,  2,  2,  2],
+         [ 3,  3,  3,  4,  4,  4,  5,  5,  5],
+         [ 3,  3,  3,  4,  4,  4,  5,  5,  5],
+         [ 3,  3,  3,  4,  4,  4,  5,  5,  5],
+         [ 3,  3,  3,  4,  4,  4,  5,  5,  5]],
+ 
+        [[ 0,  1,  2,  0,  1,  2,  0,  1,  2],
+         [ 3,  4,  5,  3,  4,  5,  3,  4,  5],
+         [ 6,  7,  8,  6,  7,  8,  6,  7,  8],
+         [ 9, 10, 11,  9, 10, 11,  9, 10, 11],
+         [ 0,  1,  2,  0,  1,  2,  0,  1,  2],
+         [ 3,  4,  5,  3,  4,  5,  3,  4,  5],
+         [ 6,  7,  8,  6,  7,  8,  6,  7,  8],
+         [ 9, 10, 11,  9, 10, 11,  9, 10, 11]]])
+    assert np.array_equal(qubit_sizes, true_qubit_sizes)
+    assert np.array_equal(encoding_map, true_encoding_map)
 
 # ---------------------- hierarchical_block_indexing Tests ----------------------
 
@@ -165,3 +208,30 @@ def test_hierarchical_block_indexing_3d_tensor():
     _, prods = get_factorlist(shape)
     result = hierarchical_block_indexing(idx, prods)
     assert result.shape == (prods.shape[0] - 1, len(shape), *shape)
+
+def test_synthetic_hierarchical_block_indexing():
+    shape = (4, 6)
+    idx = np.indices(shape)
+    _, prods = get_factorlist(shape)
+    result = hierarchical_block_indexing(idx, prods)
+    true_result = np.array([[[[0, 0, 0, 0, 0, 0],
+         [0, 0, 0, 0, 0, 0],
+         [1, 1, 1, 1, 1, 1],
+         [1, 1, 1, 1, 1, 1]],
+
+        [[0, 0, 1, 1, 2, 2],
+         [0, 0, 1, 1, 2, 2],
+         [0, 0, 1, 1, 2, 2],
+         [0, 0, 1, 1, 2, 2]]],
+
+
+       [[[0, 0, 0, 0, 0, 0],
+         [1, 1, 1, 1, 1, 1],
+         [0, 0, 0, 0, 0, 0],
+         [1, 1, 1, 1, 1, 1]],
+
+        [[0, 1, 0, 1, 0, 1],
+         [0, 1, 0, 1, 0, 1],
+         [0, 1, 0, 1, 0, 1],
+         [0, 1, 0, 1, 0, 1]]]])
+    assert np.array_equal(result, true_result)

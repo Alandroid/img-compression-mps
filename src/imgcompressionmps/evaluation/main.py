@@ -10,16 +10,16 @@ from imgcompressionmps.evaluation.benchmark import run_full_benchmark
 benchmark_configs = [
     
     {
-        "name": "MRI",
-        "dataset_path": "Data/MRI Dataset",
+        "name": "Video - Pedestrians",
+        "dataset_path": "Data/pedestrians",
         "cutoff": np.linspace(0, 0.1, 10)[1:],
-        "filename": "ds000003_0_1_10steps_to_0p1_Std.json",
-        "datatype": "MRI",
+        "filename": "Pedestrians_0_1_10steps_to_0p1_Std_new_new.json",
+        "datatype": "Video",
         "mode": "Std",
         "start": 0,
         "end": 1,
-        "ending": ".gz",
-        "shape": None
+        "ending": ".npz",
+        "shape": (200, 144, 216)
     }
 ]
 

@@ -138,7 +138,7 @@ def test_load_tensors_npz_with_shape(tmp_path, sample_array):
     f = tmp_path / "b.npz"
     np.savez_compressed(f, sequence=sample_array)
     tensors, _ = bm.load_tensors([str(f)], ".npz", shape=(1, 2, 2))
-    assert tensors[0].shape == sample_array.shape
+    assert tensors[0].shape == (1,2,2)
 
 
 def test_load_tensors_invalid_suffix():

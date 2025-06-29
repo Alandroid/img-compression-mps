@@ -31,7 +31,6 @@ def load_tensors(files, ending, shape=None):
         raise ValueError(f"Unsupported file extension: {ending}")
 
     B, H, W = shape if shape else (None, None, None)
-
     data_list = []
     bitsize_list = []
 
@@ -41,14 +40,14 @@ def load_tensors(files, ending, shape=None):
         if ending.endswith(".gz"):
             img = nib.load(path)
             data = img.get_fdata()
-            if shape:
-                data = data[:B, :H, :W]
             dtype = img.header.get_data_dtype()
 
         elif ending.endswith(".npz"):
             with np.load(path) as archive:
                 data = archive["sequence"]
                 dtype = data.dtype
+        if shape:
+            data = data[:B, :H, :W]
 
         data_list.append(data)
         bitsize_list.append(get_num_bits(dtype))
@@ -162,6 +161,9 @@ def run_benchmark(mps_list, original_tensors_list, cutoff_list):
         ("bond_dims", None),
         ("psnr", original_tensors_list),
         ("fidelity", original_mps_list),
+        ("storage", None),
+        ("gzip_bytes", None),
+        ("gzip_ratio", None),
     ]
 
     results = {name: [] for name, _ in metrics}

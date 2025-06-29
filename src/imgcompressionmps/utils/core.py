@@ -69,8 +69,9 @@ def balance_factors(factors: List[int], target_num: int) -> List[int]:
             next_smallest = factors.pop(0)
             factors.insert(0, smallest * next_smallest)
             factors.sort()
+
     elif len(factors) < target_num:
-        factors += [1] * (target_num - len(factors))
+        raise ValueError("The number of balanced factors cannot be less than the target number.")
 
     return sorted(factors)
 
