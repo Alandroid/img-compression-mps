@@ -1,0 +1,31 @@
+# general folders to be ignored
+Data/
+src/compression/__pycache__
+figures/
+results/
+src/imgcompressionmps/__pycache__/
+src/imgcompressionmps/core/__pycache__/
+src/imgcompressionmps/utils/__pycache__/
+tests/__pycache__/
+tests/core/__pycache__/
+tests/evaluation/__pycache__/
+tests/utils/__pycache__/
+
+# macOS
+**/.DS_Store
+
+# Python packaging
+**/*.egg-info/
+build/
+dist/
+
+# Dev folders
+Legacy/
+dev_test_folder/
+
+
+#Cache fiules
+__pycache__/
+**/__pycache__/
+
+*.py[cod]
