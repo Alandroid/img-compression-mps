@@ -43,12 +43,12 @@ run_full_benchmark(D_path, cutoff_list, 'Pedestrians_0_10_100steps_to_0p1_Std.js
 """
 This one is for MRI images
 """
-D_path = "Data/MRI Dataset"
+D_path = "Data/ds003799"
 #D_path = '/Users/maxge/Documents/Studium/München/02_SS 2024/QEL/Block encoding generalization/img-compression-mps/Data/fMRI_Datatset'
 #D_path = '/Users/maxge/Documents/Studium/München/02_SS 2024/QEL/Block encoding generalization/img-compression-mps/Data/fMRI_Datatset'
 
 cutoff_list = np.linspace(0, 0.1, 100)[1:]
-run_full_benchmark(D_path, cutoff_list, 'ds000003_0_13_100steps_to_0p1_Std.json', "MRI", "Std", 0, -1, ".gz", shape = None)
+run_full_benchmark(D_path, cutoff_list, 'ds003799_0_10_100steps_to_0p1_Std.json', "MRI", "Std", 0, 10, ".gz", shape = None)
 #%%
 
 """

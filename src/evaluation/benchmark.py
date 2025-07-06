@@ -1,12 +1,13 @@
 
 import sys
 import os
-from src.compression.mps_ND import NDMPS
+from compression.utils_ND import *
+import compression.utils_ND as ut
+from compression.mps_ND import *
 import nibabel as nib
 import numpy as np
 import matplotlib.pyplot as plt
 import os
-import src.compression.utils_ND as ut
 import pickle
 import json
 from copy import deepcopy
@@ -494,8 +495,16 @@ def run_full_benchmark(Dataset_path, cutoff_list, result_file, Datatype = "MRI",
     results_dict["gzip_disk_size"] = gzip_disk_size.tolist()
     results_dict["compressionratio_list_disk"] = compressionratio_list_disk.tolist()
     print("Saving results ",result_file)
-    with open("src/evaluation/results/"+result_file, 'w') as fp:
+
+    output_dir = "/scratch/m/M.Theocharakis/paper/img-compression-mps/src/evaluation/results"
+    os.makedirs(output_dir, exist_ok=True)
+
+    with open(os.path.join(output_dir, result_file), 'w') as fp:
         json.dump(results_dict, fp)
+
+
+    # with open("src/evaluation/results/"+result_file, 'w') as fp:
+    #     json.dump(results_dict, fp)
 
 
 def MRI_to_MRI_slices(data_list, bitsize_list=None):

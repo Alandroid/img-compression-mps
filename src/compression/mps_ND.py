@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import quimb.tensor as qtn
-from src.compression.utils_ND import *
+from compression.utils_ND import *
 import gzip
 import io
 from scipy.fftpack import dct, idct
