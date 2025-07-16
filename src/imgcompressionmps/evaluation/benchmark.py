@@ -184,7 +184,11 @@ def run_benchmark(mps_list, original_tensors_list, cutoff_list):
     for key in results:
         if not results[key] or not results[key][0]:
             results[key] = []
-        elif isinstance(results[key][0], (list, np.ndarray)) and np.ndim(results[key][0]) > 0:
+        elif (
+            key != "bond_dims"
+            and isinstance(results[key][0], (list, np.ndarray))
+            and np.ndim(results[key][0]) > 0
+        ):
             results[key] = np.array(results[key]).T
 
     return results

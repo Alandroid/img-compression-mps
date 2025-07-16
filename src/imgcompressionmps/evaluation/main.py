@@ -7,23 +7,55 @@ from imgcompressionmps.evaluation.benchmark import run_full_benchmark
 
 
 # --- Benchmark Configs ---
-benchmark_configs = [
-    
+
+benchmark_configs= []
+
+benchmark_configs += [
     {
-        "name": "Video - Pedestrians",
-        "dataset_path": "Data/pedestrians",
-        "cutoff": np.linspace(0, 0.1, 10)[1:],
-        "filename": "Pedestrians_0_1_10steps_to_0p1_Std_new_new.json",
-        "datatype": "Video",
-        "mode": "Std",
-        "start": 0,
-        "end": 1,
-        "ending": ".npz",
-        "shape": (200, 144, 216)
+        "name": f"fMRI_{start}_{start+5}_DCT",
+        "dataset_path": "Data/fMRI_Datatset",
+        "cutoff": np.linspace(0, 0.1, 100)[1:],
+        "filename": f"ds000011_{start}_{start+5}_100steps_to_0p1_DCT.json",
+        "datatype": "fMRI",
+        "mode": "DCT",
+        "start": start,
+        "end": start + 5,
+        "ending": ".gz",
+        "shape": None
     }
+    for start in range(15, 86, 5)  # adjust the upper bound as needed
 ]
 
 """
+benchmark_configs += [
+    {
+        "name": f"Video - Pedestrians_{start}_{start+5}_Std",
+        "dataset_path": "Data/pedestrians",
+        "cutoff": np.linspace(0, 0.1, 100)[1:],
+        "filename": f"Pedestrians_{start}_{start+5}_100steps_to_0p1_Std.json",
+        "datatype": "Video",
+        "mode": "Std",
+        "start": start,
+        "end": start + 5,
+        "ending": ".npz",
+        "shape": (200, 144, 216)
+    }
+    for start in range(155, 168, 5)
+]
+
+
+{
+        "name": "Video - Pedestrians",
+        "dataset_path": "Data/pedestrians",
+        "cutoff": np.linspace(0, 0.1, 100)[1:],
+        "filename": "Pedestrians_15_20_100steps_to_0p1_Std.json",
+        "datatype": "Video",
+        "mode": "Std",
+        "start": 15,
+        "end": 20,
+        "ending": ".npz",
+        "shape": (200, 144, 216)
+    }
 {
         "name": "Video - Pedestrians",
         "dataset_path": "Data/pedestrians",
